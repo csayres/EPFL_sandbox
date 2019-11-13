@@ -1,0 +1,21 @@
+#
+# FPS Robot Array Configuration
+#
+# Focal Plane Layout 2 - Rings & Things Configuration
+# 2018 Jan 28 [rwp/osu]
+#
+# ID = a unique integer identifier for the robot
+# Row = row number (Y-axis, -14 to +14, 0 is center row)
+# Pos = position in row (X-axis, 0 to N_row-1, increasing with +x)
+# X,Y = X,Y position in mm relative to field center (0,0)
+# Assignment = position assignment
+#    BA = BOSS+APOGEE Fibers
+#  BOSS = BOSS Fiber (no APOGEE fiber)
+#  Fiducial = Fixed Illuminated Fiducial
+#
+# Totals:
+#    500 robots: 300 B+A, 200 BOSS-only
+#     72 Fiducials
+#
+# ID     Row   Pos     X (mm)  Y (mm)          Assignment
+0023     0     0        0      0                BA
