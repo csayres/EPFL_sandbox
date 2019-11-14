@@ -9,18 +9,20 @@ import numpy
 import pickle
 
 MaxSpeed = 5 # RPM
-RobotMaxSpeed = (MaxSpeed-0.5)*360/60. # degrees per sec (3 RPM)
+RobotMaxSpeed = (MaxSpeed-2)*360/60. # degrees per sec (3 RPM)
 angStep = 0.05 # degrees per step
+smoothPts = 50
+epsilon = angStep * 100
+collisionBuffer = 3
+collisionShrink = 0.1
 nTests = 50
-makeNewPaths = False
+makeNewPaths = True
 # time = angStep * stepNum / speed
 
 def generatePath(seed=0, plot=False):
     nDia = 3
     pitch = 22.4
-    collisionBuffer = 3
-    collisionShrink = 0.1
-    epsilon = angStep * 10 # * 2.2
+
     hasApogee = True
     rg = RobotGrid(angStep, collisionBuffer, epsilon, seed)
     xPos, yPos = utils.hexFromDia(nDia, pitch=pitch)

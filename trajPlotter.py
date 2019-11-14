@@ -67,14 +67,15 @@ for r in rg.allRobots:
     sav = numpy.array(r.smoothAlphaVel)
     sbv = numpy.array(r.smoothBetaVel)
     ss = numpy.arange(len(sav))
-    print("shapes", spa.shape, rpa.shape)
-    print("plot", ii)
+
+    print("plotting", ii)
+    print("alpha start", rpa[0,:] - aRDP[0,:])
+    print("alpha end", rpa[-1,:] - aRDP[-1,:])
+    print("beta start", rpb[0,:] - bRDP[0,:])
+    print("beta end", rpb[-1,:] - bRDP[-1,:])
+
     fig, ax = plt.subplots(2,1, figsize=(10,10))
-    print("alpha start", spa[0,:] - rpa[0,:])
-    print("alpha end", spa[-1,:] - rpa[-1,:])
-    print("beta start", spb[0,:] - rpb[0,:])
-    print("beta end", spb[-1,:] - rpb[-1,:])
-    print("\n\n")
+
 
     ax[0].plot(rpa[:,0], rpa[:,1], linewidth=0.2, label="rough alpha", alpha=0.8)
     ax[0].plot(rpb[:,0], rpb[:,1], linewidth=0.2, label="rough beta", alpha=0.8)
