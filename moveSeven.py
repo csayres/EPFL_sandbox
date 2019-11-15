@@ -30,13 +30,36 @@ doPlot = False
 # time = angStep * stepNum / speed
 # hack make sure these are sorted by
 posDict = OrderedDict()
-posDict[16] = [-19.39896904, -11.20000000]
-posDict[17] = [0, 0]
-posDict[19] = [19.39896904, -11.20000000]
-posDict[20] = [19.39896904, 11.20000000]
-posDict[21] = [0, 22.4]
-posDict[24] = [0, -22.4]
-posDict[25] = [-19.39896904, 11.20000000]
+
+# these are 'perfect'
+# posDict[16] = [-19.39896904, -11.20000000]
+# posDict[17] = [0, 0]
+# posDict[19] = [19.39896904, -11.20000000]
+# posDict[20] = [19.39896904, 11.20000000]
+# posDict[21] = [0, 22.4]
+# posDict[24] = [0, -22.4]
+# posDict[25] = [-19.39896904, 11.20000000]
+
+# these are calibration outputs measured in mm from top left
+centerXY = numpy.array([64.45, -45.66])
+posDict[16] = numpy.array([53.40, -26.08])
+posDict[17] = centerXY # center
+posDict[19] = numpy.array([53.17, -64.76])
+posDict[20] = numpy.array([75.64, -64.95])
+posDict[21] = numpy.array([86.95, -45.54])
+posDict[24] = numpy.array([42.03, -45.27])
+posDict[25] = numpy.array([75.84, -26.41])
+
+c90 = numpy.cos(numpy.radians(90))
+s90 = numpy.sin(numpy.radians(90))
+rotMat = numpy.array([
+    [c90, s90],
+    [-s90, c90]
+])
+for key in posDict.keys():
+    fromMiddle = posDict[key] - centerXY
+    posDict[key] = numpy.dot(fromMiddle, rotMat)
+    # print("pos", key, posDict[key])
 
 
 # print("pos ids", posDict.keys())
@@ -142,9 +165,10 @@ async def main():
     # print("FPS status", fps[robotID].status)
 
     trialNumber = 0
-    for seed in range(5000,40000):
-        if trialNumber > 50:
-            break
+    seed = 0
+    logFile = open("moveSeven.log", "w")
+    while True:
+        seed += 1
 
         print("moveSeven, seed=%i, collisionBuffer=%.4f"%(seed, collisionBuffer))
         try:
@@ -162,25 +186,30 @@ async def main():
             print("skipping un interesting path")
             continue
 
-        print("max steps", maxSteps)
 
         # Send positioner 4 to alpha=0, beta=180 # path transfer position
         gotoHome = [fps[rID].goto(alpha=0, beta=180) for rID in posDict.keys()]
         await asyncio.gather(*gotoHome)
+
+        logFile.write("starting forward trajectory seed=%i trial=%i collisionBuffer=%.2f\n"%(seed, trialNumber, collisionBuffer))
 
         print("forward path going")
         await fps.send_trajectory(fp, False)
         print("trajectory done")
 
         time.sleep(1)
+        logFile.write("starting reverse trajectory seed=%i trial=%i collisionBuffer=%.2f\n"%(seed, trialNumber, collisionBuffer))
 
         print("reverse path")
         await fps.send_trajectory(rp, False)
         print("trajectory done")
         trialNumber += 1
 
+        if fps.locked:
+            logFile("FPS is locked! exiting\n")
         # Cleanly finish all pending tasks and exit
     await fps.shutdown()
+    logFile.close()
 
 asyncio.run(main())
 
