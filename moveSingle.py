@@ -8,15 +8,23 @@ import numpy
 
 import pickle
 
+from trajPlotter import plotTraj
+
+# seed 7 robot 0 is problematic (truncation on beta didn't work)
+# seed 529 smoothing failed with  78
+
 MaxSpeed = 5 # RPM
-RobotMaxSpeed = (MaxSpeed-2)*360/60. # degrees per sec (3 RPM)
+RobotMaxSpeed = (MaxSpeed-0.5)*360/60. # degrees per sec (3 RPM)
 angStep = 0.05 # degrees per step
-smoothPts = 50
-epsilon = angStep * 100
+smoothPts = 5
+epsilon = angStep * 2
 collisionBuffer = 3
-collisionShrink = 0.1
-nTests = 50
-makeNewPaths = True
+collisionShrink = 0.02
+nSavedPaths = 50
+makeNewPaths = False
+doPlot = False
+nTrials = 2000
+robotID = 14
 # time = angStep * stepNum / speed
 
 def generatePath(seed=0, plot=False):
@@ -36,51 +44,36 @@ def generatePath(seed=0, plot=False):
     rg.decollide2()
     rg.pathGen()
     if rg.didFail:
-        print("failed")
+        print("path gen failed")
         raise(RuntimeError, "path gen failed")
-    rg.smoothPaths()
+    rg.smoothPaths(smoothPts)
+    rg.simplifyPaths()
     rg.setCollisionBuffer(collisionBuffer - collisionShrink)
     rg.verifySmoothed()
 
     if rg.smoothCollisions:
+        print("smoothing failed with ", rg.smoothCollisions)
         raise(RuntimeError, "smoothing failed")
 
     # find the positioner with the most interpolated steps
     useRobot = None
     maxSteps = 0
     for i, r in enumerate(rg.allRobots):
-        m = len(r.smoothBetaPath)
+        m = len(r.simplifiedBetaPath) # beta path is usually more complicated
         if m > maxSteps:
             maxSteps = m
             useRobot = r
 
-    bp = numpy.array(useRobot.betaPath)
-    sbp = numpy.array(useRobot.interpSmoothBetaPath)
-    ibp = numpy.array(useRobot.smoothBetaPath)
-
-    ap = numpy.array(useRobot.alphaPath)
-    sap = numpy.array(useRobot.interpSmoothAlphaPath)
-    iap = numpy.array(useRobot.smoothAlphaPath)
-
     if plot:
-        plt.figure(figsize=(10,10))
-        print("ip points", len(ibp))
-        plt.plot(bp[:,0], bp[:,1], 'g', alpha=0.5)
-        plt.plot(sbp[:,0], sbp[:,1])
-        plt.plot(ibp[:,0], ibp[:,1], 'ok', alpha=0.5, fillstyle="none", markersize=1)
-        plt.plot()
-        plt.savefig("%i_beta.png"%useRobot.id, dpi=250)
-        plt.close()
+        plotTraj(useRobot, "seed_%i_"%seed, dpi=250)
 
-        plt.figure(figsize=(10,10))
+    # bp = numpy.array(useRobot.betaPath)
+    # sbp = numpy.array(useRobot.interpSmoothBetaPath)
+    ibp = numpy.array(useRobot.simplifiedBetaPath)
 
-        print("ip points", len(iap))
-        plt.plot(ap[:,0], ap[:,1], 'g', alpha=0.5)
-        plt.plot(sap[:,0], sap[:,1])
-        plt.plot(iap[:,0], iap[:,1], 'ok', alpha=0.5, fillstyle="none", markersize=1)
-        plt.plot()
-        plt.savefig("%i_alpha.png"%useRobot.id, dpi=250)
-        plt.close()
+    # ap = numpy.array(useRobot.alphaPath)
+    # sap = numpy.array(useRobot.interpSmoothAlphaPath)
+    iap = numpy.array(useRobot.simplifiedAlphaPath)
 
     # generate kaiju trajectory (for robot 23)
     # time = angStep * stepNum / speed
@@ -96,7 +89,7 @@ def generatePath(seed=0, plot=False):
 
     reversePath = {
 
-        23 : armPathR
+        robotID : armPathR
     }
 
     # build forward path
@@ -111,7 +104,7 @@ def generatePath(seed=0, plot=False):
 
     forwardPath = {
 
-        23 : armPathF
+        robotID : armPathF
     }
 
 
@@ -121,13 +114,15 @@ if makeNewPaths:
     problematicTuples = []
     trajPoints = []
     seeds = []
-    for seed in range(2000):
+    for seed in range(nTrials):
         print("seed", seed)
         try:
-            fp, rp, maxSteps = generatePath(seed)
+            fp, rp, maxSteps = generatePath(seed, plot=doPlot)
+            print("generate path worked")
         except:
             continue
-        if len(problematicTuples) < nTests:
+
+        if len(problematicTuples) < nSavedPaths:
             problematicTuples.append([fp,rp])
             trajPoints.append(maxSteps)
             seeds.append(seed)
@@ -157,8 +152,8 @@ else:
 def plotTrajectories():
     fig = plt.figure(figsize=(10,10))
     for fp, rp in problematicTuples:
-        alphaPts = numpy.asarray(fp[23]["alpha"])
-        betaPts = numpy.asarray(fp[23]["beta"])
+        alphaPts = numpy.asarray(fp[robotID]["alpha"])
+        betaPts = numpy.asarray(fp[robotID]["beta"])
         plt.plot(alphaPts[:,1], alphaPts[:,0], 'k')
         plt.plot(betaPts[:,1], betaPts[:,0], 'k')
     fig.savefig("traj.png")
@@ -178,10 +173,10 @@ async def main():
     await fps.initialise()
 
     # Print the status of positioner 4
-    print("FPS status", fps[23].status)
+    print("FPS status", fps[robotID].status)
 
     # Send positioner 4 to alpha=0, beta=180 # path transfer position
-    await fps[23].goto(alpha=0, beta=180)
+    await fps[robotID].goto(alpha=0, beta=180)
 
     for ii, (fp, rp) in enumerate(problematicTuples):
         print("trajectory", ii)
@@ -206,7 +201,7 @@ async def main():
 
         time.sleep(1)
 
-        print("forward path to ", fp[23]["alpha"][-1], fp[23]["beta"][-1])
+        print("forward path to ", fp[robotID]["alpha"][-1], fp[robotID]["beta"][-1])
         await fps.send_trajectory(fp, False)
         print("trajectory done")
 
@@ -215,9 +210,10 @@ async def main():
         print("reverse path")
         await fps.send_trajectory(rp, False)
         print("trajectory done")
+        # break
 
     # Cleanly finish all pending tasks and exit
     await fps.shutdown()
 
-# asyncio.run(main())
+asyncio.run(main())
 

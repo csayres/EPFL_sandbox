@@ -29,30 +29,9 @@ collisionShrink = 0.1
 epsilon = angStep * 3
 seed1 = 0
 hasApogee = True
-figOffset = 0
-xLim = [-70, 70]
-yLim = [-70, 70]
-# maxPathSteps = int(700.0/angStep)
-seed1 = 0
-rg = RobotGrid(angStep, collisionBuffer, epsilon, seed1)
-xPos, yPos = utils.hexFromDia(nDia, pitch=pitch)
-for ii, (xp,yp) in enumerate(zip(xPos,yPos)):
-    rg.addRobot(ii, xp, yp, hasApogee)
-rg.initGrid()
-for ii in range(rg.nRobots):
-    r = rg.getRobot(ii)
-    r.setXYUniform()
-# set all positioners randomly (they are initialized at 0,0)
-rg.decollide2()
-rg.pathGen()
-rg.smoothPaths(smoothPts) # must be odd
-rg.simplifyPaths()
-rg.setCollisionBuffer(collisionBuffer-collisionShrink)
-rg.verifySmoothed()
 
-ii = 0
-for r in rg.allRobots:
-    ii += 1
+def plotTraj(r, figprefix="traj_", dpi=500):
+    # r is a robot
     spa = numpy.array(r.smoothedAlphaPath)
     spb = numpy.array(r.smoothedBetaPath)
     rpa = numpy.array(r.alphaPath)
@@ -68,11 +47,11 @@ for r in rg.allRobots:
     sbv = numpy.array(r.smoothBetaVel)
     ss = numpy.arange(len(sav))
 
-    print("plotting", ii)
-    print("alpha start", rpa[0,:] - aRDP[0,:])
-    print("alpha end", rpa[-1,:] - aRDP[-1,:])
-    print("beta start", rpb[0,:] - bRDP[0,:])
-    print("beta end", rpb[-1,:] - bRDP[-1,:])
+    # print("plotting", r.id)
+    # print("alpha start", rpa[0,:] - aRDP[0,:])
+    # print("alpha end", rpa[-1,:] - aRDP[-1,:])
+    # print("beta start", rpb[0,:] - bRDP[0,:])
+    # print("beta end", rpb[-1,:] - bRDP[-1,:])
 
     fig, ax = plt.subplots(2,1, figsize=(10,10))
 
@@ -94,7 +73,35 @@ for r in rg.allRobots:
     # plt.legend()
 
 
-    plt.savefig("robot_%s.png"%ii, dpi=1000)
+    plt.savefig(figprefix+"robot_%s.png"%r.id, dpi=dpi)
     plt.close()
+
+# maxPathSteps = int(700.0/angStep)
+if __name__ == "__main__":
+    seed1 = 0
+    cos = numpy.cos(numpy.radians(90))
+    sin = numpy.sin(numpy.radians(90))
+
+    rg = RobotGrid(angStep, collisionBuffer, epsilon, seed1)
+    xPos, yPos = utils.hexFromDia(nDia, pitch=pitch)
+    for ii, (xp,yp) in enumerate(zip(xPos,yPos)):
+        xrot = cos * xp + sin * yp
+        yrot = sin * xp - cos * yp
+        print("%.8f, %.8f"%(xrot,yrot))
+        rg.addRobot(ii, xrot, yrot, hasApogee)
+    rg.initGrid()
+    for ii in range(rg.nRobots):
+        r = rg.getRobot(ii)
+        r.setXYUniform()
+    # set all positioners randomly (they are initialized at 0,0)
+    rg.decollide2()
+    rg.pathGen()
+    rg.smoothPaths(smoothPts) # must be odd
+    rg.simplifyPaths()
+    rg.setCollisionBuffer(collisionBuffer-collisionShrink)
+    rg.verifySmoothed()
+
+    for r in rg.allRobots:
+        plotTraj(r)
 
 

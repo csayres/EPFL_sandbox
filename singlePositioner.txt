@@ -18,4 +18,4 @@
 #     72 Fiducials
 #
 # ID     Row   Pos     X (mm)  Y (mm)          Assignment
-0023     0     0        0      0                BA
+0014     0     0        0      0                BA
