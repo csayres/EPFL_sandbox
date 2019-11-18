@@ -155,7 +155,7 @@ def generatePath(seed=0, plot=False, movie=False):
 async def main():
 
     # Set logging level to DEBUG
-    log.set_level(50)
+    log.set_level(20)
 
     # Initialise the FPS instance.
     fps = FPS(layout="grid7.txt")
@@ -206,7 +206,7 @@ async def main():
         trialNumber += 1
 
         if fps.locked:
-            logFile("FPS is locked! exiting\n")
+            logFile.write("FPS is locked! exiting\n")
         # Cleanly finish all pending tasks and exit
     await fps.shutdown()
     logFile.close()
