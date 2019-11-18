@@ -672,7 +672,7 @@ def main():
             ROI[4] = np.sqrt(ROI[2]**2+ROI[3]**2)
 
             camera.setROI(ROI)
-                        print("camera params", camera.parameters)
+            print("camera params", camera.parameters)
 
             for i in range(0,nbCentroidsLoop):
                 currentComputation = []
