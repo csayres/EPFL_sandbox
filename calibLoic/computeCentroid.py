@@ -389,7 +389,7 @@ def main():
 	# plt.draw()
 	# plt.pause(1e-17)
 
-	centroid = compute_centroid_refactored(imgIn,cam.parameters,1)
+	centroid = compute_centroid(imgIn,cam.parameters,1)
 	print(centroid)
 	plt.figure()
 	plt.pcolormesh(np.add(Xin,cam.parameters.xCorr) , np.add(Yin, cam.parameters.yCorr), imgIn, cmap=plt.cm.viridis)

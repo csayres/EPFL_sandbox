@@ -628,7 +628,7 @@ def main():
 
 		try:
 			#create camera instance
-			camera = Camera(cameraType = DEFINES.PC_CAMERA_TYPE_XY, compatibleCameraID=22942361) #22942361 #22994237
+			camera = Camera(cameraType = DEFINES.PC_CAMERA_TYPE_XY, compatibleCameraID=22289804) #22942361 #22994237
 			
 			#_=os.system('echo Taking picture')
 			camera.setMaxROI()
@@ -750,6 +750,6 @@ def main():
 
 if __name__ == '__main__':
 	log.init()
-	graph_heating_effect()
-	# main()
+	#graph_heating_effect()
+	main()
 	log.stop()
