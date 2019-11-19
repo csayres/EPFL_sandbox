@@ -48,6 +48,9 @@ def expose():
     cam_scale_factor = cam_distortion[DEFINES.PC_FILE_DISTORTION_SCALE_FACTOR_NAME]
     xCorr = numpy.nan_to_num(cam_x_corr[0,0])
     yCorr = numpy.nan_to_num(cam_y_corr[0,0])
+    # invert correlation mats so that 0,0 is bottom left instead of top left
+    xCorr = xCoor[::-1,:]
+    yCorr = yCoor[::-1,:]
     scaleFactor = cam_scale_factor[0,0][0,0]
     camera = cam.Camera(cameraType = DEFINES.PC_CAMERA_TYPE_XY, compatibleCameraID=22289804) #22942361 #22994237
     camera.setMaxROI()
@@ -55,9 +58,12 @@ def expose():
     camera.setDistortionCorrection(config)
     camera.setProperties(exposure_time, gain, black_level, gamma)
     imgData = camera.getImage()
+    # invert image so that 0,0 is bottom left, ds9 displays
+    # things in the way we see it
+    imgData = imgData[::-1,:]
     print("imgData shape", imgData.shape)
     hdu = fits.PrimaryHDU(imgData)
-    hdu.writeto("img.fits")
+    hdu.writeto("img.fits", overwrite=True)
 
     # mpimg.imsave(filename,picture)
 
@@ -68,12 +74,7 @@ def findCentroids(imgData):
         readNoise = 2, # read noise, in e-
         ccdGain = 2,  # inverse ccd gain, in e-/ADU
     )
-    # 1598, 1313 measured in ds9 from 0,0 at bottom left
-    # img = mpimg.imread("outfile.tiff")
-    # print(img.shape)
-    # img = img[::-1,:, 0]
-    # plt.imshow(img, origin="lower")
-    # plt.show()
+
     mask=None
     ctrDataList, imStats = PyGuide.findStars(
         data = imgData,
