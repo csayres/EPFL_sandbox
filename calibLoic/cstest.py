@@ -49,8 +49,8 @@ def expose():
     xCorr = numpy.nan_to_num(cam_x_corr[0,0])
     yCorr = numpy.nan_to_num(cam_y_corr[0,0])
     # invert correlation mats so that 0,0 is bottom left instead of top left
-    xCorr = xCoor[::-1,:]
-    yCorr = yCoor[::-1,:]
+    xCorr = xCorr[::-1,:]
+    yCorr = yCorr[::-1,:]
     scaleFactor = cam_scale_factor[0,0][0,0]
     camera = cam.Camera(cameraType = DEFINES.PC_CAMERA_TYPE_XY, compatibleCameraID=22289804) #22942361 #22994237
     camera.setMaxROI()
