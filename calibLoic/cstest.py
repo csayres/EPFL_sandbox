@@ -57,7 +57,7 @@ def expose():
     imgData = camera.getImage()
     print("imgData shape", imgData.shape)
     hdu = fits.PrimaryHDU(imgData)
-    hdu.writeTo("img.fits")
+    hdu.writeto("img.fits")
 
     # mpimg.imsave(filename,picture)
 
