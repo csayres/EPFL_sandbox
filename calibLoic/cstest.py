@@ -50,6 +50,8 @@ def expose():
     yCorr = numpy.nan_to_num(cam_y_corr[0,0])
     # invert correlation mats so that 0,0 is bottom left instead of top left
     xCorr = xCorr[::-1,:]
+    # multiply xCorrections by -1 because we inverted that axis?
+    xCorr = xCorr * -1.0
     yCorr = yCorr[::-1,:]
     scaleFactor = cam_scale_factor[0,0][0,0]
     camera = cam.Camera(cameraType = DEFINES.PC_CAMERA_TYPE_XY, compatibleCameraID=22289804) #22942361 #22994237
@@ -61,11 +63,7 @@ def expose():
     # invert image so that 0,0 is bottom left, ds9 displays
     # things in the way we see it
     imgData = imgData[::-1,:]
-    print("imgData shape", imgData.shape)
-    hdu = fits.PrimaryHDU(imgData)
-    hdu.writeto("img.fits", overwrite=True)
-
-    # mpimg.imsave(filename,picture)
+    return imgData
 
 def findCentroids(imgData):
     import PyGuide
@@ -89,5 +87,12 @@ def findCentroids(imgData):
         rad = ctrData.rad
         print("star xyCtr=%.2f, %.2f, radius=%s" % (xyCtr[0], xyCtr[1], rad))
 
+
+def writeImg(imgData):
+    hdu = fits.PrimaryHDU(imgData)
+    hdu.writeto("img.fits", overwrite=True)
+
 if __name__ == "__main__":
-    expose()
+    imgData = expose()
+    findCentroids(imgData)
+    writeImg(imgData)
