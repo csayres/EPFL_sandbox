@@ -56,6 +56,9 @@ def expose():
     camera.setProperties(exposure_time, gain, black_level, gamma)
     imgData = camera.getImage()
     print("imgData shape", imgData.shape)
+    hdu = fits.PrimaryHDU(imgData)
+    hdu.writeTo("img.fits")
+
     # mpimg.imsave(filename,picture)
 
 def findCentroids(imgData):
