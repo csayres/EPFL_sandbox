@@ -99,6 +99,7 @@ async def main():
         # print("loading pos %i [%.2f, %.2f]"%(r.id, r.xPos, r.yPos))
         # print("robotID", r.id)
         alpha, beta = fps.positioners[r.id].position
+        print(r.id, alpha, beta)
         r.setAlphaBeta(alpha, beta)
     # set all positioners randomly (they are initialized at 0,0)
     # rg.decollide2()
@@ -145,7 +146,7 @@ async def main():
         reversePath[robotID] = armPathR
 
 
-    # await fps.send_trajectory(fp, False)
+    # await fps.send_trajectory(reversePath, False)
     await fps.shutdown()
 
 
