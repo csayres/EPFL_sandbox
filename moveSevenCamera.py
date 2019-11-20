@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/home/tendo/work/python/EPFL_sandbox/calibLoic")
+
 import asyncio
 from jaeger import FPS, log
 import time
@@ -11,6 +14,8 @@ from trajPlotter import plotTraj
 from movieExample import plotMovie
 from calibLoic import csCam
 import PyGuide
+
+
 
 # seed 7 robot 0 is problematic (truncation on beta didn't work)
 # seed 529 smoothing failed with  78
