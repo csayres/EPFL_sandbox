@@ -43,8 +43,10 @@ def expose():
     import classCamera as cam
     cam_distortion = io.loadmat("Config/Cameras/camera_22289804.mat")
     cam_distortion = cam_distortion[DEFINES.PC_FILE_DISTORTION_PARAMETERS_NAME]
+    # correction matrices are in pixels
     cam_x_corr = cam_distortion[DEFINES.PC_FILE_DISTORTION_XCORR_NAME]
     cam_y_corr = cam_distortion[DEFINES.PC_FILE_DISTORTION_YCORR_NAME]
+    # scale factor is microns per pixel
     cam_scale_factor = cam_distortion[DEFINES.PC_FILE_DISTORTION_SCALE_FACTOR_NAME]
     xCorr = numpy.nan_to_num(cam_x_corr[0,0])
     yCorr = numpy.nan_to_num(cam_y_corr[0,0])
@@ -65,7 +67,10 @@ def expose():
     imgData = imgData[::-1,:]
     return imgData
 
-def findCentroids(imgData):
+def findCentroids(imgData, xyCtrs, roiRadius=50):
+    # xyCtrs [[x1,y1], [x2,y2]] pixels
+    # roiRadius for making mask, put squares of width roiWidth/2
+    # on expected positions of centroids
     import PyGuide
     CCDInfo = PyGuide.CCDInfo(
         bias = 2,    # image bias, in ADU
@@ -73,19 +78,38 @@ def findCentroids(imgData):
         ccdGain = 2,  # inverse ccd gain, in e-/ADU
     )
 
-    mask=None
+    mask = numpy.zeros(imgData.shape) + 1 # 1 is invalid data
+    for xCtr,yCtr in xyCtrs:
+        # be careful drawing mask first index is image rows in imgData
+        # second index is image columns (x pixels)
+        xCtr = int(numpy.floor(xCtr))
+        yCtr = int(numpy.floor(yCtr))
+        startRow = xCtr - roiRadius
+        if startRow < 0:
+            startRow = 0
+        endRow = xCtr + roiRadius
+        if endRow > imgData.shape[1]:
+            endRow = imgData.shape[1]
+
+        startCol = yCtr - roiRadius
+        if startCol < 0:
+            startCol = 0
+        endCol = yCtr + roiRadius
+        if endCol > imgData.shape[0]:
+            endCol = imgData.shape[0]
+
+        mask[startCol:endCol, startRow:endRow] = 0
+
     ctrDataList, imStats = PyGuide.findStars(
         data = imgData,
         mask = mask,
         satMask = None,
+        thresh=200,
         ccdInfo = CCDInfo,
         verbosity = 0,
         doDS9 = False,
     )[0:2]
-    for ctrData in ctrDataList:
-        xyCtr = ctrData.xyCtr
-        rad = ctrData.rad
-        print("star xyCtr=%.2f, %.2f, radius=%s" % (xyCtr[0], xyCtr[1], rad))
+    return ctrDataList
 
 
 def writeImg(imgData):
@@ -93,6 +117,22 @@ def writeImg(imgData):
     hdu.writeto("img.fits", overwrite=True)
 
 if __name__ == "__main__":
-    imgData = expose()
-    findCentroids(imgData)
-    writeImg(imgData)
+    # imgData = expose()
+    f = fits.open("img.fits")
+    imgData = f[0].data
+    f.close()
+    # plt.imshow(imgData, origin="lower")
+    # plt.plot()
+    # plt.show()
+
+    ctrDataList = findCentroids(imgData, [[1356.19, 1334.28]]) #
+    # ctrDataList = findCentroids(imgData, [[1356.19, 2720]])
+
+    for ctrData in ctrDataList:
+        xyCtr = ctrData.xyCtr
+        rad = ctrData.rad
+        counts = ctrData.counts
+        print("star xyCtr=%.2f, %.2f, radius=%s counts=%.2f" % (xyCtr[0], xyCtr[1], rad, counts))
+
+    # f.close()
+    # writeImg(imgData)
