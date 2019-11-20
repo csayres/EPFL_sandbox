@@ -29,7 +29,7 @@ epsilon = angStep * 2
 collisionBuffer = 2
 collisionShrink = 0.02
 doPlot = False
-roiRadius = 50
+roiRadius = 50 # pixels
 
 CCDInfo = PyGuide.CCDInfo(
     bias = 2,    # image bias, in ADU
@@ -182,8 +182,8 @@ def centroid(imgData, xyKaijuMM):
     mask = numpy.zeros(imgData.shape)
     # take abs value of positioner because it's y axis is defined
     # negative (loic's positions are measured from top left)
-    xyImagePix = numpy.dot(xyKaijuMM, rot2image) / csCam.SCALE_FACTOR + numpy.abs(posDict[centerPositioner])
-    xGuess, yGuess = xyImagePix
+    xyImageMM = numpy.dot(xyKaijuMM, rot2image) + numpy.abs(posDict[centerPositioner])
+    xGuess, yGuess = xyImageMM / csCam.SCALE_FACTOR
     xROI = numpy.int(numpy.floor(xGuess))
     yROI = numpy.int(numpy.floor(yGuess))
     startRow = xROI - roiRadius
