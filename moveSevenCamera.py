@@ -31,6 +31,19 @@ CCDInfo = PyGuide.CCDInfo(
     ccdGain = 2,  # inverse ccd gain, in e-/ADU
 )
 
+c90 = numpy.cos(numpy.radians(90))
+s90 = numpy.sin(numpy.radians(90))
+rot2kaiju = numpy.array([
+    [c90, s90],
+    [-s90, c90]
+])
+rot2image = numpy.array([
+    [c90, -s90],
+    [s90, c90]
+])
+
+centerPositioner = 17
+
 def getGetPositionerData():
     posDict = OrderedDict()
 
@@ -44,18 +57,12 @@ def getGetPositionerData():
     posDict[24] = numpy.array([38.95, -45.28])
     posDict[25] = numpy.array([72.78, -26.42])
 
-    centerXY = posDict[17]
+    centerXY = posDict[centerPositioner]
     # rotate grid such that it is aligned with
     # kaiju's definition (alpha=0 is aligned with +x)
-    c90 = numpy.cos(numpy.radians(90))
-    s90 = numpy.sin(numpy.radians(90))
-    rotMat = numpy.array([
-        [c90, s90],
-        [-s90, c90]
-    ])
     for key in posDict.keys():
         fromMiddle = posDict[key] - centerXY
-        posDict[key] = numpy.dot(fromMiddle, rotMat)
+        posDict[key] = numpy.dot(fromMiddle, rot2kaiju)
         print("pos", key, posDict[key])
     return posDict
 
@@ -164,12 +171,33 @@ def generatePath(rg, plot=False, movie=False, fileIndex=0):
 
     return forwardPath, reversePath
 
-def centroid(imgData, xyExpect):
+def centroid(imgData, xyKaijuMM):
     # xy center in mm kaiju coord sys
-    mask = numpy.zeros(imgData.shape) + 1
+    mask = numpy.zeros(imgData.shape)
+    # take abs value of positioner because it's y axis is defined
+    # negative (loic's positions are measured from top left)
+    xyImageMM = numpy.dot(xyKaijuMM, rot2image) + numpy.abs(posDict[centerPositioner])
+    xGuess, yGuess = xyKaijuMM
+    xROI = numpy.int(numpy.floor(xGuess))
+    yROI = numpy.int(numpy.floor(yGuess))
+    startRow = xROI - roiRadius
+    if startRow < 0:
+        startRow = 0
+    endRow = xROI + roiRadius
+    if endRow > imgData.shape[1]:
+        endRow = imgData.shape[1]
 
+    startCol = yROI - roiRadius
+    if startCol < 0:
+        startCol = 0
+    endCol = yROI + roiRadius
+    if endCol > imgData.shape[0]:
+        endCol = imgData.shape[0]
 
+    mask[startCol:endCol, startRow:endRow] = 30
 
+    plt.imshow(imgData + mask)
+    plt.show()
 
 async def main():
 
@@ -241,6 +269,13 @@ async def main():
 
 # asyncio.run(main())
 rg = homeGrid()
+
+targPos = getTargetPositions(rg)
+
+imgData = csCam.camera.getImage()
+
+centroid(imgData, targPos[24])
+
 
 # fp, rp = generatePath(1, movie=True)
 
