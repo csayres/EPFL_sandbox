@@ -15,8 +15,6 @@ from movieExample import plotMovie
 from calibLoic import csCam
 import PyGuide
 
-
-
 # seed 7 robot 0 is problematic (truncation on beta didn't work)
 # seed 529 smoothing failed with  78
 
@@ -202,7 +200,8 @@ def centroid(imgData, xyKaijuMM):
     mask[startCol:endCol, startRow:endRow] = 30
 
     plt.imshow(imgData + mask)
-    plt.show()
+    plt.savefig("test.tiff")
+    plt.close()
 
 async def main():
 
