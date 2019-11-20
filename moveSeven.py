@@ -193,14 +193,14 @@ async def main():
         logFile.write("starting forward trajectory seed=%i trial=%i collisionBuffer=%.2f\n"%(seed, trialNumber, collisionBuffer))
 
         print("forward path going")
-        await fps.send_trajectory(fp, False)
+        await fps.send_trajectory(fp)
         print("trajectory done")
 
         time.sleep(1)
         logFile.write("starting reverse trajectory seed=%i trial=%i collisionBuffer=%.2f\n"%(seed, trialNumber, collisionBuffer))
 
         print("reverse path")
-        await fps.send_trajectory(rp, False)
+        await fps.send_trajectory(rp)
         print("trajectory done")
         trialNumber += 1
 

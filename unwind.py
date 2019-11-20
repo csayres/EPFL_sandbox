@@ -142,7 +142,7 @@ async def main():
         reversePath[robotID] = armPathR
 
 
-    await fps.send_trajectory(reversePath, False)
+    await fps.send_trajectory(reversePath)
     await fps.shutdown()
 
 

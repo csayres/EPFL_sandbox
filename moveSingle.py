@@ -202,13 +202,13 @@ async def main():
         time.sleep(1)
 
         print("forward path to ", fp[robotID]["alpha"][-1], fp[robotID]["beta"][-1])
-        await fps.send_trajectory(fp, False)
+        await fps.send_trajectory(fp)
         print("trajectory done")
 
         time.sleep(1)
 
         print("reverse path")
-        await fps.send_trajectory(rp, False)
+        await fps.send_trajectory(rp)
         print("trajectory done")
         # break
 
