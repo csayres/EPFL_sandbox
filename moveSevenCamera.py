@@ -48,8 +48,6 @@ rot2image = numpy.array([
     [s90, c90]
 ])
 
-centerPositioner = 17
-
 def getGetPositionerData():
     posDict = OrderedDict()
 
@@ -70,9 +68,9 @@ def getGetPositionerData():
         fromMiddle = posDict[key] - centerXY
         posDict[key] = numpy.dot(fromMiddle, rot2kaiju)
         print("pos", key, posDict[key])
-    return posDict
+    return centerXY, posDict
 
-posDict = getGetPositionerData()
+centerXYMM, posDict = getGetPositionerData()
 
 def newGrid(seed=0):
     hasApogee = True
@@ -182,7 +180,7 @@ def centroid(imgData, xyKaijuMM):
     mask = numpy.zeros(imgData.shape)
     # take abs value of positioner because it's y axis is defined
     # negative (loic's positions are measured from top left)
-    xyImageMM = numpy.dot(xyKaijuMM, rot2image) + numpy.abs(posDict[centerPositioner])
+    xyImageMM = numpy.dot(xyKaijuMM, rot2image) + numpy.abs(centerXYMM)
     xGuess, yGuess = xyImageMM / csCam.SCALE_FACTOR
     xROI = numpy.int(numpy.floor(xGuess))
     yROI = numpy.int(numpy.floor(yGuess))
