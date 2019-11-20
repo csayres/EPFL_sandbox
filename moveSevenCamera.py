@@ -284,7 +284,8 @@ targPos = getTargetPositions(rg)
 
 imgData = csCam.camera.getImage()
 
-centroid(imgData, targPos[24])
+for robotID in [24, 16, 20]:
+    centroid(imgData, targPos[robotID])
 
 
 # fp, rp = generatePath(1, movie=True)
