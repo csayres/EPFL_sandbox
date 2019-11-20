@@ -70,7 +70,7 @@ async def main():
     #log.set_level(20)
 
     # Initialise the FPS instance.
-    fps = FPS()
+    fps = FPS(layout="grid7.txt")
     await fps.initialise()
 
     hasApogee = True
@@ -88,18 +88,14 @@ async def main():
         rg.addRobot(posID, xp, yp, hasApogee)
     rg.initGrid()
 
-    ### get all robots current positions...
-    for pos_id in fps.positioners:
-        pos = fps.positioners[pos_id]
-        alpha, beta = pos.position
-
-    #
+    #print("fps.positioners", fps.positioners)
     for ii in range(rg.nRobots):
         r = rg.getRobot(ii)
         # print("loading pos %i [%.2f, %.2f]"%(r.id, r.xPos, r.yPos))
         # print("robotID", r.id)
+        await fps.positioners[r.id].update_position()
         alpha, beta = fps.positioners[r.id].position
-        print(r.id, alpha, beta)
+        print("IIII", r.id, alpha, beta)
         r.setAlphaBeta(alpha, beta)
     # set all positioners randomly (they are initialized at 0,0)
     # rg.decollide2()
