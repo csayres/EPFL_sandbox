@@ -2,16 +2,15 @@ import asyncio
 from jaeger import FPS, log
 import time
 
-from kaiju import RobotGrid, utils
+from kaiju import RobotGrid
 import matplotlib.pyplot as plt
 import numpy
-
-import pickle
 from collections import OrderedDict
 
 from trajPlotter import plotTraj
-
 from movieExample import plotMovie
+from calibLoic import csCam
+import PyGuide
 
 # seed 7 robot 0 is problematic (truncation on beta didn't work)
 # seed 529 smoothing failed with  78
@@ -23,73 +22,86 @@ smoothPts = 5
 epsilon = angStep * 2
 collisionBuffer = 2
 collisionShrink = 0.02
-nSavedPaths = 50
-makeNewPaths = False
 doPlot = False
-# posList = [19, 20, 24, 17, 21, 16, 25]
-# time = angStep * stepNum / speed
-# hack make sure these are sorted by
-posDict = OrderedDict()
+roiRadius = 50
 
-# these are 'perfect'
-# posDict[16] = [-19.39896904, -11.20000000]
-# posDict[17] = [0, 0]
-# posDict[19] = [19.39896904, -11.20000000]
-# posDict[20] = [19.39896904, 11.20000000]
-# posDict[21] = [0, 22.4]
-# posDict[24] = [0, -22.4]
-# posDict[25] = [-19.39896904, 11.20000000]
+CCDInfo = PyGuide.CCDInfo(
+    bias = 2,    # image bias, in ADU
+    readNoise = 2, # read noise, in e-
+    ccdGain = 2,  # inverse ccd gain, in e-/ADU
+)
 
-# these are calibration outputs measured in mm from top left
-centerXY = numpy.array([64.45, -45.66])
-posDict[16] = numpy.array([53.40, -26.08])
-posDict[17] = centerXY # center
-posDict[19] = numpy.array([53.17, -64.76])
-posDict[20] = numpy.array([75.64, -64.95])
-posDict[21] = numpy.array([86.95, -45.54])
-posDict[24] = numpy.array([42.03, -45.27])
-posDict[25] = numpy.array([75.84, -26.41])
+def getGetPositionerData():
+    posDict = OrderedDict()
 
-c90 = numpy.cos(numpy.radians(90))
-s90 = numpy.sin(numpy.radians(90))
-rotMat = numpy.array([
-    [c90, s90],
-    [-s90, c90]
-])
-for key in posDict.keys():
-    fromMiddle = posDict[key] - centerXY
-    posDict[key] = numpy.dot(fromMiddle, rotMat)
-    # print("pos", key, posDict[key])
+    # these are calibration outputs measured in mm from top left
+    # centerXY = numpy.array([50.33, -45.66])
+    posDict[16] = numpy.array([50.33, -26.13])
+    posDict[17] = numpy.array([61.39, -45.68]) # center
+    posDict[19] = numpy.array([50.08, -64.74])
+    posDict[20] = numpy.array([72.56, -64.95])
+    posDict[21] = numpy.array([83.87, -45.58])
+    posDict[24] = numpy.array([38.95, -45.28])
+    posDict[25] = numpy.array([72.78, -26.42])
 
+    centerXY = posDict[17]
+    # rotate grid such that it is aligned with
+    # kaiju's definition (alpha=0 is aligned with +x)
+    c90 = numpy.cos(numpy.radians(90))
+    s90 = numpy.sin(numpy.radians(90))
+    rotMat = numpy.array([
+        [c90, s90],
+        [-s90, c90]
+    ])
+    for key in posDict.keys():
+        fromMiddle = posDict[key] - centerXY
+        posDict[key] = numpy.dot(fromMiddle, rotMat)
+        print("pos", key, posDict[key])
+    return posDict
 
-# print("pos ids", posDict.keys())
+posDict = getGetPositionerData()
 
-
-def generatePath(seed=0, plot=False, movie=False):
-    nDia = 3
-    pitch = 22.4
-
+def newGrid(seed=0):
     hasApogee = True
     rg = RobotGrid(angStep, collisionBuffer, epsilon, seed)
 
-    # epfl grid is sideways
-    # xPos, yPos = utils.hexFromDia(nDia, pitch=pitch)
-    # for ii, (xp, yp), posID in enumerate(zip(xPos, yPos, posList)):
-    #     rg.addRobot(posID, xp, yp, hasApogee)
-    # rg.initGrid()
-
-    for posID, (xp,yp) in posDict.items():
-        # print("loading pos %i [%.2f, %.2f]"%(posID, xp, yp))
+    for posID, (xp, yp) in posDict.items():
         rg.addRobot(posID, xp, yp, hasApogee)
     rg.initGrid()
 
     for ii in range(rg.nRobots):
         r = rg.getRobot(ii)
-        # print("loading pos %i [%.2f, %.2f]"%(r.id, r.xPos, r.yPos))
-        # print("robotID", r.id)
         r.setXYUniform()
-    # set all positioners randomly (they are initialized at 0,0)
     rg.decollide2()
+    return rg
+
+def homeGrid():
+    hasApogee = True
+    seed = 0
+    rg = RobotGrid(angStep, collisionBuffer, epsilon, seed)
+
+    for posID, (xp, yp) in posDict.items():
+        rg.addRobot(posID, xp, yp, hasApogee)
+    rg.initGrid()
+
+    for ii in range(rg.nRobots):
+        r = rg.getRobot(ii)
+        r.setAlphaBeta(0, 180)
+    rg.decollide2()
+    return rg
+
+def getTargetPositions(rg):
+    ## return target positions for positioners in mm
+    # in kaiju's coord system (mm)
+    targetPositions = OrderedDict()
+    for r in rg.allRobots:
+        x, y, z = r.metFiberPos
+        targetPositions[r.id] = [x, y]
+    return targetPositions
+
+
+def generatePath(rg, plot=False, movie=False, fileIndex=0):
+
     rg.pathGen()
     if rg.didFail:
         print("path gen failed")
@@ -104,7 +116,7 @@ def generatePath(seed=0, plot=False, movie=False):
         raise(RuntimeError, "smoothing failed")
 
     if movie:
-        plotMovie(rg, filename="movie_%i"%seed)
+        plotMovie(rg, filename="movie_%i"%fileIndex)
 
     # find the positioner with the most interpolated steps
     forwardPath = {}
@@ -114,7 +126,7 @@ def generatePath(seed=0, plot=False, movie=False):
 
         assert robotID == r.id
         if plot:
-            plotTraj(r, "seed_%i_"%seed, dpi=250)
+            plotTraj(r, "seed_%i_"%fileIndex, dpi=250)
 
         # bp = numpy.array(r.betaPath)
         # sbp = numpy.array(r.interpSmoothBetaPath)
@@ -152,13 +164,21 @@ def generatePath(seed=0, plot=False, movie=False):
 
     return forwardPath, reversePath
 
+def centroid(imgData, xyExpect):
+    # xy center in mm kaiju coord sys
+    mask = numpy.zeros(imgData.shape) + 1
+
+
+
+
 async def main():
 
     # Set logging level to DEBUG
-    #log.set_level(20)
+    log.set_level(20)
 
     # Initialise the FPS instance.
-    fps = FPS(layout="grid7.txt")
+    # fps = FPS(layout="grid7.txt")
+    fps = FPS()
     await fps.initialise()
 
     # Print the status of positioner 4
@@ -166,12 +186,17 @@ async def main():
 
     trialNumber = 0
     seed = 0
-    logFile = open("moveSeven.log", "w")
+    logFile = open("moveSevenCamera.log", "w")
     while True:
         seed += 1
+        rg = newGrid(seed)
+
+        # grab the targets
+        targetPositions = getTargetPositions(rg)
+
         print("moveSeven, seed=%i, collisionBuffer=%.4f"%(seed, collisionBuffer))
         try:
-            fp, rp = generatePath(seed, plot=False)
+            fp, rp = generatePath(rg, plot=False, movie=False, fileIndex=seed)
         except:
             print("path deadlocked skip it")
             continue
@@ -185,33 +210,40 @@ async def main():
             print("skipping un interesting path")
             continue
 
-
-        # Send positioner 4 to alpha=0, beta=180 # path transfer position
+        # send all to 0 180
         gotoHome = [fps[rID].goto(alpha=0, beta=180) for rID in posDict.keys()]
         await asyncio.gather(*gotoHome)
 
         logFile.write("starting forward trajectory seed=%i trial=%i collisionBuffer=%.2f\n"%(seed, trialNumber, collisionBuffer))
 
         print("forward path going")
-        await fps.send_trajectory(fp)
+        await fps.send_trajectory(fp, False)
         print("trajectory done")
-
         time.sleep(1)
+        # measure the positions of all the guys
+
+        imgData = csCam.camera.getImage()
+
+
+
         logFile.write("starting reverse trajectory seed=%i trial=%i collisionBuffer=%.2f\n"%(seed, trialNumber, collisionBuffer))
 
         print("reverse path")
-        await fps.send_trajectory(rp)
+        await fps.send_trajectory(rp, False)
         print("trajectory done")
         trialNumber += 1
 
         if fps.locked:
             logFile.write("FPS is locked! exiting\n")
-            break
         # Cleanly finish all pending tasks and exit
     await fps.shutdown()
     logFile.close()
 
+# asyncio.run(main())
+rg = homeGrid()
 
-asyncio.run(main())
+# fp, rp = generatePath(1, movie=True)
+
+# print(fp)
 
 
