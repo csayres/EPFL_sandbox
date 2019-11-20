@@ -48,6 +48,8 @@ rot2image = numpy.array([
     [s90, c90]
 ])
 
+centerPositioner = 17
+
 def getGetPositionerData():
     posDict = OrderedDict()
 
