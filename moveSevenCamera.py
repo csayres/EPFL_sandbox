@@ -203,6 +203,7 @@ def centroid(imgData, xyKaijuMM):
     mask[startCol:endCol, startRow:endRow] = 200
 
     plt.imshow(imgData + mask)
+    plt.imshow(mask)
     plt.show()
     # plt.savefig("test.tiff")
     # plt.close()
