@@ -155,7 +155,7 @@ def generatePath(seed=0, plot=False, movie=False):
 async def main():
 
     # Set logging level to DEBUG
-    log.set_level(20)
+    #log.set_level(20)
 
     # Initialise the FPS instance.
     fps = FPS(layout="grid7.txt")
@@ -169,7 +169,6 @@ async def main():
     logFile = open("moveSeven.log", "w")
     while True:
         seed += 1
-
         print("moveSeven, seed=%i, collisionBuffer=%.4f"%(seed, collisionBuffer))
         try:
             fp, rp = generatePath(seed, plot=False)
@@ -207,11 +206,22 @@ async def main():
 
         if fps.locked:
             logFile.write("FPS is locked! exiting\n")
+            break
         # Cleanly finish all pending tasks and exit
     await fps.shutdown()
     logFile.close()
 
-asyncio.run(main())
+async def unwind(seed):
+    fp, rp = generatePath(seed, plot=False)
+    for pos in rp.keys():
+        print(pos, "beta", rp[pos]["beta"][0])
+    #await fps.initialise()
+    #await fps.send_trajectory(rp, False)
+    #await fps.shutdown()
+
+#asyncio.run(main())
+
+asyncio.run(unwind(894))
 
 # fp, rp = generatePath(1, movie=True)
 
