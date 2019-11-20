@@ -69,7 +69,7 @@ def getGetPositionerData():
     for key in posDict.keys():
         fromMiddle = posDict[key] - centerXY
         posDict[key] = numpy.dot(fromMiddle, rot2kaiju)
-        print("pos", key, posDict[key])
+        # print("pos", key, posDict[key])
     return centerXY, posDict
 
 centerXYMM, posDict = getGetPositionerData()
