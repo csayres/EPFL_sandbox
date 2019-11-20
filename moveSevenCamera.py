@@ -179,6 +179,7 @@ def generatePath(rg, plot=False, movie=False, fileIndex=0):
 
 def centroid(imgData, xyKaijuMM):
     # xy center in mm kaiju coord sys
+    imgData = imgData[::-1,:]
     mask = numpy.zeros(imgData.shape)
     # take abs value of positioner because it's y axis is defined
     # negative (loic's positions are measured from top left)
