@@ -202,8 +202,8 @@ def centroid(imgData, xyKaijuMM):
 
     mask[startCol:endCol, startRow:endRow] = 200
 
-    plt.imshow(imgData + mask)
-    plt.plot(xROI, yROI, "ok")
+    plt.imshow(imgData + mask, origin="lower")
+    # plt.plot(xROI, yROI, "ok")
     plt.show()
     # plt.savefig("test.tiff")
     # plt.close()
