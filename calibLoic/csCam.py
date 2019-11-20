@@ -14,7 +14,7 @@ DETECT_THRESH = 200 # counts for detection threshold
 
 
 def getDistortion():
-    cam_distortion = io.loadmat("Config/Cameras/camera_22289804.mat")
+    cam_distortion = io.loadmat("/home/tendo/work/python/EPFL_sandbox/calibLoic/Config/Cameras/camera_22289804.mat")
     cam_distortion = cam_distortion[DEFINES.PC_FILE_DISTORTION_PARAMETERS_NAME]
     # correction matrices are in pixels
     cam_x_corr = cam_distortion[DEFINES.PC_FILE_DISTORTION_XCORR_NAME]
