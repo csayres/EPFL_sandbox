@@ -200,7 +200,7 @@ def centroid(imgData, xyKaijuMM):
     if endCol > imgData.shape[0]:
         endCol = imgData.shape[0]
 
-    mask[startCol:endCol, startRow:endRow] = 30
+    mask[startCol:endCol, startRow:endRow] = 200
 
     plt.imshow(imgData + mask)
     plt.show()
