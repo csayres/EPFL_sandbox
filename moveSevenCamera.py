@@ -182,9 +182,8 @@ def centroid(imgData, xyKaijuMM):
     mask = numpy.zeros(imgData.shape)
     # take abs value of positioner because it's y axis is defined
     # negative (loic's positions are measured from top left)
-    xyImageMM = numpy.dot(xyKaijuMM, rot2image) + numpy.abs(posDict[centerPositioner])
-    xyImagePix = xyImageMM / csCam.SCALE_FACTOR
-    xGuess, yGuess = xyKaijuMM
+    xyImagePix = numpy.dot(xyKaijuMM, rot2image) / csCam.SCALE_FACTOR + numpy.abs(posDict[centerPositioner])
+    xGuess, yGuess = xyImagePix
     xROI = numpy.int(numpy.floor(xGuess))
     yROI = numpy.int(numpy.floor(yGuess))
     startRow = xROI - roiRadius
