@@ -239,19 +239,20 @@ def centroid(imgData, positionerTargetsMM):
         print("star xyCtr=%.2f, %.2f, radius=%s counts=%.2f" % (xyCtr[0], xyCtr[1], rad, counts))
     # plot the desired targets
     centroidsPx = numpy.asarray(centroidsPx)
+    nTargs = len(positionerTargetsPx.values())
+    nCentroids = len(centroidsPx)
+
     for posID, (xTargetPx, yTargetPx) in positionerTargetsPx.items():
         plt.plot(xTargetPx, yTargetPx, 'xr', markersize=10)
 
     # calculate distances between all targets and all centroids
-    if len(centroidsPx) > len(positionerTargetsPx.values):
+    if nCentroids > nTargs:
         print("warning: more centroids than targets")
-    if len(centroidsPx) < len(positionerTargetsPx.values):
+    if nCentroids < nTargs:
         print("warning: more targets than centroids")
 
     # associate each target with the best centroid
     # create a matrix of distances
-    nTargs = len(positionerTargetsPx.values())
-    nCentroids = len(centroidsPx)
     distMat = numpy.zeros((nTargs, nCentroids))
     for tInd, targ in enumerate(positionerTargetsPx.values()):
         print("targ shape", targ.shape)
