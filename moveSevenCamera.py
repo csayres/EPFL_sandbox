@@ -183,7 +183,7 @@ def generatePath(rg, plot=False, movie=False, fileIndex=0):
 
     return forwardPath, reversePath
 
-def centroid(imgData, positionerTargetsMM):
+def centroid(imgData, positionerTargetsMM, plot=False):
     # xy center in mm kaiju coord sys
     imgData = imgData[::-1,:]
     numCols, numRows = imgData.shape
@@ -246,7 +246,8 @@ def centroid(imgData, positionerTargetsMM):
     for posID, (xTargetPx, yTargetPx) in positionerTargetsPx.items():
         plt.plot(xTargetPx, yTargetPx, 'xr', markersize=10)
 
-    plt.show()
+    if plot:
+        plt.show()
     # calculate distances between all targets and all centroids
     if nCentroids > nTargs:
         # don't allow false positives
@@ -273,6 +274,7 @@ def centroid(imgData, positionerTargetsMM):
     for cInd, (tInd, dist) in enumerate(cent2target):
         print("centroid %i gets target %i at distance %.2f pixels"%(cInd, tInd, dist))
 
+    plt.close()
     return numpy.array(cent2target)
     # find the best target for each centroids
 
