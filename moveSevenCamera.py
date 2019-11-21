@@ -35,7 +35,7 @@ doPlot = False
 roiRadiusMM = 0.75
 roiRadiusPx = int(numpy.floor(roiRadiusMM / csCam.SCALE_FACTOR))
 print("roi Radius", roiRadiusPx)
-detectThresh = 200
+detectThresh = 150
 
 CCDInfo = PyGuide.CCDInfo(
     bias = 2,    # image bias, in ADU
