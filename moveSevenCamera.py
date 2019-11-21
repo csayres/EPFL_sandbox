@@ -207,7 +207,7 @@ def centroid(imgData, positionerTargets):
 
         mask[startCol:endCol, startRow:endRow] = 0
 
-    plt.imshow(imgData + mask, origin="lower")
+    plt.imshow(imgData + numpy.abs(mask-1)*200, origin="lower")
     ctrDataList, imStats = PyGuide.findStars(
         data = imgData,
         mask = mask,
