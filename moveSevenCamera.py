@@ -408,6 +408,10 @@ def measureDisplacement():
         imgDataList.append(csCam.camera.getImage())
     imgDataList = numpy.array(imgDataList)
     imgData = numpy.sum(imgDataList, axis=0) / nImgAvg
+    import pickle
+    f = open("imgData.pkl", "wb")
+    pickle.dump(imgData, f)
+    f.close()
     output = centroid(imgData, targPos, plot=True)
 
 measureDisplacement()
