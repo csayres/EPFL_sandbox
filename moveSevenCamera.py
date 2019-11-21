@@ -221,7 +221,7 @@ def centroid(imgData, positionerTargets):
         xyCtr = ctrData.xyCtr
         rad = ctrData.rad
         counts = ctrData.counts
-        plt.plot(xyCtr[0], xyCtr,[1], 'or', alpha=0.2)
+        plt.plot(xyCtr[0], xyCtr[1], 'or', alpha=0.2)
         print("star xyCtr=%.2f, %.2f, radius=%s counts=%.2f" % (xyCtr[0], xyCtr[1], rad, counts))
 
     # plt.plot(xROI, yROI, "ok")
