@@ -369,7 +369,7 @@ for nImg in nImages:
     print("imgList shape", imgList.shape)
     stackedImg = numpy.sum(imgList, axis=0) / nImg
     print("averaged shape", stackedImg.shape)
-    centToTarget = centroid(stackedImg, targPos)
+    centToTarget = centroid(stackedImg, targPos, plot=True)
     outputList.append(centToTarget)
 
 outputList = numpy.array(outputList)
