@@ -32,7 +32,7 @@ doPlot = False
 
 # set roi width to 0.5 mm (within a beta arm)
 # we should only get one detection
-roiRadius = int(numpy.floor(0.25 / csCam.SCALE_FACTOR))
+roiRadius = int(numpy.floor(0.75 / csCam.SCALE_FACTOR))
 print("roi Radius", roiRadius)
 detectThresh = 200
 
