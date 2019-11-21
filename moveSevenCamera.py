@@ -265,9 +265,19 @@ def centroid(imgData, positionerTargetsMM):
         distArr = numpy.array([numpy.linalg.norm(targ-cent) for targ in targArrayPx])
         targInd = numpy.argmin(distArr)
         cent2target.append([targInd, distArr[targInd]])
+    cent2target = numpy.array(cent2target)
+    # for paranoia, remove any targets with distance greater than the ROI,
+    # not sure this could happen but check anyways
+
 
     for cInd, (tInd, dist) in enumerate(cent2target):
         print("centroid %i gets target %i at distance %.2f pixels"%(cInd, tInd, dist))
+
+    cent2target = cent2target[cent2target[:,1] < 8]
+    print("cleaning target associations")
+    for cInd, (tInd, dist) in enumerate(cent2target):
+        print("centroid %i gets target %i at distance %.2f pixels"%(cInd, tInd, dist))
+
 
 
 
