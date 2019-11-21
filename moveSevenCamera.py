@@ -178,20 +178,22 @@ def generatePath(rg, plot=False, movie=False, fileIndex=0):
 
     return forwardPath, reversePath
 
-def centroid(imgData, positionerTargets):
+def centroid(imgData, positionerTargetsMM):
     # xy center in mm kaiju coord sys
     imgData = imgData[::-1,:]
     numCols, numRows = imgData.shape
     mask = numpy.zeros(imgData.shape) + 1
     # build the mask, draw squares around expected positions
-    for posID, xyKaijuMM in positionerTargets.items():
+    positionerTargetsPx = {}
+    for posID, xyKaijuMM in positionerTargetsMM.items():
         # take abs value of positioner because it's y axis is defined
         # negative (loic's positions are measured from top left)
         xyImageMM = numpy.dot(xyKaijuMM, rot2image) + numpy.abs(centerXYMM)
-        xGuess, yGuess = xyImageMM / csCam.SCALE_FACTOR
+        xTargetPx, yTargetPx = xyImageMM / csCam.SCALE_FACTOR
+        positionerTargetsPx[posID] = [xTargetPx, yTargetPx]
         # rotate into reference frame with 0,0 at bottom left
-        xROI = numpy.int(numpy.floor(xGuess))
-        yROI = numpy.int(numpy.floor(yGuess))
+        xROI = numpy.int(numpy.floor(xTargetPx))
+        yROI = numpy.int(numpy.floor(yTargetPx))
         startRow = xROI - roiRadius
         if startRow < 0:
             startRow = 0
@@ -208,8 +210,11 @@ def centroid(imgData, positionerTargets):
 
         mask[startCol:endCol, startRow:endRow] = 0
 
-    # imshow defaults to -0.5, -0.5 for origin
+    # imshow defaults to -0.5, -0.5 for origin, set this to 0,0
+    # plot the mask used too make it positive valued so it shows up
     plt.imshow(imgData + numpy.abs(mask-1)*200, origin="lower", extent=(0, numRows, 0, numCols))
+
+    # find all the centroids, and loop through and plot them
     ctrDataList, imStats = PyGuide.findStars(
         data = imgData,
         mask = mask,
@@ -225,6 +230,9 @@ def centroid(imgData, positionerTargets):
         counts = ctrData.counts
         plt.plot(xyCtr[0], xyCtr[1], 'or', markersize=10, fillstyle="none")#, alpha=0.2)
         print("star xyCtr=%.2f, %.2f, radius=%s counts=%.2f" % (xyCtr[0], xyCtr[1], rad, counts))
+    # plot the desired targets
+    for posID, (xTargetPx, yTargetPx) in positionerTargetsPx.items():
+        plt.plot(xTargetPx, yTargetPx, 'xr', markersize=10)
 
     # plt.plot(xROI, yROI, "ok")
     plt.show()
