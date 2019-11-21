@@ -268,22 +268,12 @@ def centroid(imgData, positionerTargetsMM):
     cent2target = numpy.array(cent2target)
     # for paranoia, remove any targets with distance greater than the ROI,
     # not sure this could happen but check anyways
-
+    cent2target = cent2target[cent2target[:,1] < roiRadiusPx]
 
     for cInd, (tInd, dist) in enumerate(cent2target):
         print("centroid %i gets target %i at distance %.2f pixels"%(cInd, tInd, dist))
 
-    cent2target = cent2target[cent2target[:,1] < 8]
-    print("cleaning target associations")
-    for cInd, (tInd, dist) in enumerate(cent2target):
-        print("centroid %i gets target %i at distance %.2f pixels"%(cInd, tInd, dist))
-
-
-
-
-
-
-
+    return numpy.array(cent2target)
     # find the best target for each centroids
 
     # plt.plot(xROI, yROI, "ok")
@@ -363,10 +353,24 @@ rg = homeGrid()
 
 targPos = getTargetPositions(rg)
 
-imgData = csCam.camera.getImage()
+# find number of images after which centroids become stable
+outputList = []
+nImages = list(range(1,10))
+for nImg in nImages:
+    print("trying nImg", nImg)
+    imgList = []
+    for i in range(nImg):
+        tStart = time.time()
+        imgList.append(csCam.camera.getImage())
+        print("image took %.2f seconds"%(time.time()-tStart))
+    stackedImg = numpy.sum(axis=2) / nImg
+    centToTarget = centroid(stackedImg, targPos)
+    outputList.append(centToTarget)
 
-centroid(imgData, targPos)
-
+outputList = numpy.array(outputList)
+print("outputList shape", outputList.shape)
+# plt.figure()
+# plt.plot(nImages, outputList)
 
 # fp, rp = generatePath(1, movie=True)
 
