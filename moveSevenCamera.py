@@ -32,8 +32,9 @@ doPlot = False
 
 # set roi width to 0.5 mm (within a beta arm)
 # we should only get one detection
-roiRadius = int(numpy.floor(0.75 / csCam.SCALE_FACTOR))
-print("roi Radius", roiRadius)
+roiRadiusMM = 0.75
+roiRadiusPx = int(numpy.floor(roiRadiusMM / csCam.SCALE_FACTOR))
+print("roi Radius", roiRadiusPx)
 detectThresh = 200
 
 CCDInfo = PyGuide.CCDInfo(
@@ -188,27 +189,27 @@ def centroid(imgData, positionerTargetsMM):
     numCols, numRows = imgData.shape
     mask = numpy.zeros(imgData.shape) + 1
     # build the mask, draw squares around expected positions
-    positionerTargetsPx = {}
+    positionerTargetsPx = OrderedDict()
     for posID, xyKaijuMM in positionerTargetsMM.items():
         # take abs value of positioner because it's y axis is defined
         # negative (loic's positions are measured from top left)
         xyImageMM = numpy.dot(xyKaijuMM, rot2image) + numpy.abs(centerXYMM)
         xTargetPx, yTargetPx = xyImageMM / csCam.SCALE_FACTOR
-        positionerTargetsPx[posID] = [xTargetPx, yTargetPx]
+        positionerTargetsPx[posID] = numpy.array([xTargetPx, yTargetPx])
         # rotate into reference frame with 0,0 at bottom left
         xROI = numpy.int(numpy.floor(xTargetPx))
         yROI = numpy.int(numpy.floor(yTargetPx))
-        startRow = xROI - roiRadius
+        startRow = xROI - roiRadiusPx
         if startRow < 0:
             startRow = 0
-        endRow = xROI + roiRadius
+        endRow = xROI + roiRadiusPx
         if endRow > imgData.shape[1]:
             endRow = imgData.shape[1]
 
-        startCol = yROI - roiRadius
+        startCol = yROI - roiRadiusPx
         if startCol < 0:
             startCol = 0
-        endCol = yROI + roiRadius
+        endCol = yROI + roiRadiusPx
         if endCol > imgData.shape[0]:
             endCol = imgData.shape[0]
 
@@ -237,8 +238,24 @@ def centroid(imgData, positionerTargetsMM):
         plt.plot(xyCtr[0], xyCtr[1], 'or', markersize=10, fillstyle="none")#, alpha=0.2)
         print("star xyCtr=%.2f, %.2f, radius=%s counts=%.2f" % (xyCtr[0], xyCtr[1], rad, counts))
     # plot the desired targets
+    centroidsPx = numpy.asarray(centroidsPx)
     for posID, (xTargetPx, yTargetPx) in positionerTargetsPx.items():
         plt.plot(xTargetPx, yTargetPx, 'xr', markersize=10)
+
+    # calculate distances between all targets and all centroids
+    if len(centroidsPx) > len(positionerTargetsPx.values):
+        print("warning: more centroids than targets")
+    if len(centroidsPx) < len(positionerTargetsPx.values):
+        print("warning: more targets than centroids")
+
+    # associate each target with the best centroid
+    # create a matrix of distances
+    nTargs = len(positionerTargetsPx.values())
+    nCentroids = len(centroidsPx)
+    distMat = numpy.zeros((nTargs, nCentroids))
+    for tInd, targ in enumerate(positionerTargetsPx.values()):
+        print("targ shape", targ.shape)
+        print("centroid shape", centroidsPx.shape)
 
     # plt.plot(xROI, yROI, "ok")
     plt.show()
