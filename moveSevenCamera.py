@@ -29,6 +29,7 @@ epsilon = angStep * 2
 collisionBuffer = 2
 collisionShrink = 0.02
 doPlot = False
+nImgAvg = 4
 
 # set roi width to 0.5 mm (within a beta arm)
 # we should only get one detection
@@ -262,19 +263,27 @@ def centroid(imgData, positionerTargetsMM, plot=False):
     targArrayPx = numpy.array(list(positionerTargetsPx.values()))
     targIdArray = numpy.array(list(positionerTargetsPx.keys()))
     # for each centroid give it a target
-    cent2target = [] # holds targetIndex, and distance to target
-    for cent in centroidsPx:
+    cent2target = [] # holds centroidIndex, targetIndex, and distance to target in px
+    for centInd, cent in enumerate(centroidsPx):
         # a row of disntances for this target
         distArr = numpy.array([numpy.linalg.norm(targ-cent) for targ in targArrayPx])
         targInd = numpy.argmin(distArr)
-        cent2target.append([targInd, distArr[targInd]])
+        cent2target.append([centInd, targInd, distArr[targInd]])
     cent2target = numpy.array(cent2target)
     # for paranoia, remove any targets with distance greater than the ROI,
     # not sure this could happen but check anyways
-    cent2target = cent2target[cent2target[:,1] < roiRadiusPx]
+    cent2target = cent2target[cent2target[:,2] < roiRadiusPx]
 
-    for cInd, (tInd, dist) in enumerate(cent2target):
+    for cInd, tInd, dist in cent2target:
         print("centroid %i gets target %i at distance %.2f pixels"%(cInd, tInd, dist))
+
+    # calculate the offsets (vector from centroid to target)
+    # in kaiju's reference frame in mm
+    for cInd, tInd, dist in cent2target:
+        posID = targIdArray[tInd]
+        targPix = targArrayPx[tInd]
+        centPix = centroidsPx[cInd]
+        print("dist %i %.2f"%(posID, numpy.linalg.norm(targPix-centPix)))
 
     plt.close()
     return numpy.array(cent2target)
@@ -370,7 +379,7 @@ def multiImage():
             print("image took %.2f seconds"%(time.time()-tStart))
         imgList = numpy.array(imgList)
         print("imgList shape", imgList.shape)
-        stackedImg = numpy.median(imgList, axis=0)# / nImg
+        stackedImg = numpy.sum(imgList, axis=0) / nImg
         print("averaged shape", stackedImg.shape)
         centToTarget = centroid(stackedImg, targPos, plot=False)
         outputList.append(centToTarget)
@@ -389,15 +398,19 @@ def multiImage():
     # plt.legend()
     plt.show()
 
-def singleImage():
+def measureDisplacement():
     rg = homeGrid()
     targPos = getTargetPositions(rg)
-    imgData = csCam.camera.getImage()
+    imgDataList = []
+    for i in range(nImgAvg):
+        imgDataList.append(csCam.camera.getImage())
+    imgDataList = numpy.array(imgDataList)
+    imgData = numpy.sum(imgDataList, axis=0) / nImgAvg
     output = centroid(imgData, targPos, plot=True)
 
-# singleImage()
+measureDisplacement()
 
-multiImage()
+# multiImage()
 
 # plt.plot(nImages, outputList)
 
