@@ -45,7 +45,7 @@ centerPositioner = 17
 posDict[16] = numpy.array([50.33, -26.13])
 posDict[17] = numpy.array([61.38, -45.77])
 posDict[19] = numpy.array([50.08, -64.74])
-posDict[20] = numpy.array([72.56, -54.95])
+posDict[20] = numpy.array([72.56, -64.95])
 posDict[21] = numpy.array([83.87, -45.58])
 posDict[24] = numpy.array([38.98, -45.43])
 posDict[25] = numpy.array([72.78, -26.42])
@@ -61,7 +61,7 @@ rotMat = numpy.array([
 for key in posDict.keys():
     fromMiddle = posDict[key] - centerXY
     posDict[key] = numpy.dot(fromMiddle, rotMat)
-    # print("pos", key, posDict[key])
+    print("pos", key, posDict[key])
 
 
 # print("pos ids", posDict.keys())
