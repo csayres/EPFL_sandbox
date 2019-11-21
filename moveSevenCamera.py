@@ -382,7 +382,7 @@ def multiImage():
     plt.plot(nImages, )
     # plt.figure()
     for i in range(outputList.shape[1]):
-        plt.plot(nImages, outputList[:,i,1], label="cent %i"%i) # middle index is centroid number, last is distance
+        plt.plot(nImages, outputList[:,i,1] * csCam.SCALE_FACTOR, label="cent %i"%i) # middle index is centroid number, last is distance
     plt.legend()
     plt.show()
 
