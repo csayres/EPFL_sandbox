@@ -198,7 +198,7 @@ async def main():
         await fps.send_trajectory(fp)
         print("trajectory done")
 
-        time.sleep(1)
+        await asyncio.sleep(1)
         logFile.write("starting reverse trajectory seed=%i trial=%i collisionBuffer=%.2f\n"%(seed, trialNumber, collisionBuffer))
 
         print("reverse path")
