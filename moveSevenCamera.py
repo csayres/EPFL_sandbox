@@ -231,7 +231,8 @@ def centroid(imgData, positionerTargetsMM):
     )[0:2]
     centroidsPx = []
     for ctrData in ctrDataList:
-        centroidsPx.append(ctrData.xyCtr)
+        # need to index explicity because ctrData is actually an object
+        centroidsPx.append([ctrData.xyCtr[0], ctrData.xyCtr[1]])
         xyCtr = ctrData.xyCtr
         rad = ctrData.rad
         counts = ctrData.counts
