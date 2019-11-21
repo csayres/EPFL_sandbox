@@ -276,10 +276,7 @@ def centroid(imgData, positionerTargetsMM):
 
     # find the best target for each centroids
 
-
-    print("distMat", distMat)
     # plt.plot(xROI, yROI, "ok")
-    plt.show()
     # plt.savefig("test.tiff")
     # plt.close()
 
