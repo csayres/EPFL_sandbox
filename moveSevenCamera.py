@@ -245,6 +245,7 @@ def centroid(imgData, positionerTargetsMM):
     for posID, (xTargetPx, yTargetPx) in positionerTargetsPx.items():
         plt.plot(xTargetPx, yTargetPx, 'xr', markersize=10)
 
+    plt.show()
     # calculate distances between all targets and all centroids
     if nCentroids > nTargs:
         # don't allow false positives
