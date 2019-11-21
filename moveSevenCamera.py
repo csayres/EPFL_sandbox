@@ -181,6 +181,7 @@ def generatePath(rg, plot=False, movie=False, fileIndex=0):
 def centroid(imgData, positionerTargets):
     # xy center in mm kaiju coord sys
     imgData = imgData[::-1,:]
+    numCols, numRows = imgData.shape
     mask = numpy.zeros(imgData.shape) + 1
     # build the mask, draw squares around expected positions
     for posID, xyKaijuMM in positionerTargets.items():
@@ -207,7 +208,8 @@ def centroid(imgData, positionerTargets):
 
         mask[startCol:endCol, startRow:endRow] = 0
 
-    plt.imshow(imgData + numpy.abs(mask-1)*200, origin="lower")
+    # imshow defaults to -0.5, -0.5 for origin
+    plt.imshow(imgData + numpy.abs(mask-1)*200, origin="lower", extent=(0, numCols, 0, numRows))
     ctrDataList, imStats = PyGuide.findStars(
         data = imgData,
         mask = mask,
