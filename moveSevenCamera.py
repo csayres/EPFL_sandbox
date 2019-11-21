@@ -183,7 +183,7 @@ def centroid(imgData, positionerTargets):
     imgData = imgData[::-1,:]
     mask = numpy.zeros(imgData.shape) + 1
     # build the mask, draw squares around expected positions
-    for posID, xyKaijuMM in positionerTarges.items():
+    for posID, xyKaijuMM in positionerTargets.items():
         # take abs value of positioner because it's y axis is defined
         # negative (loic's positions are measured from top left)
         xyImageMM = numpy.dot(xyKaijuMM, rot2image) + numpy.abs(centerXYMM)
