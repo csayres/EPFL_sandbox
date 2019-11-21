@@ -41,14 +41,16 @@ posDict = OrderedDict()
 # posDict[25] = [-19.39896904, 11.20000000]
 
 # these are calibration outputs measured in mm from top left
-centerXY = numpy.array([64.45, -45.66])
-posDict[16] = numpy.array([53.40, -26.08])
-posDict[17] = centerXY # center
-posDict[19] = numpy.array([53.17, -64.76])
-posDict[20] = numpy.array([75.64, -64.95])
-posDict[21] = numpy.array([86.95, -45.54])
-posDict[24] = numpy.array([42.03, -45.27])
-posDict[25] = numpy.array([75.84, -26.41])
+centerPositioner = 17
+posDict[16] = numpy.array([50.33, -26.13])
+posDict[17] = numpy.array([61.38, -45.77])
+posDict[19] = numpy.array([50.08, -64.74])
+posDict[20] = numpy.array([72.56, -54.95])
+posDict[21] = numpy.array([83.87, -45.58])
+posDict[24] = numpy.array([38.98, -45.43])
+posDict[25] = numpy.array([72.78, -26.42])
+
+centerXY = posDict[centerPositioner]
 
 c90 = numpy.cos(numpy.radians(90))
 s90 = numpy.sin(numpy.radians(90))

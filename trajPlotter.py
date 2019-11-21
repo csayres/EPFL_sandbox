@@ -16,18 +16,16 @@ from kaiju import utils, RobotGrid
 nDia = 3
 pitch = 22.4
 
-angStep = 1
-smoothPts = 3 # 101 for 0.05
-epsilon = angStep * 2
+# angStep = 1
+# smoothPts = 3 # 101 for 0.05
+# epsilon = angStep * 2
 
 angStep = .05
-smoothPts = 50
-epsilon = angStep * 100
+smoothPts = 5*5
+epsilon = angStep * 2
 
-collisionBuffer = 3
-collisionShrink = 0.1
-epsilon = angStep * 3
-seed1 = 0
+collisionBuffer = 2
+collisionShrink = 0.02
 hasApogee = True
 
 def plotTraj(r, figprefix="traj_", dpi=500):
@@ -78,30 +76,48 @@ def plotTraj(r, figprefix="traj_", dpi=500):
 
 # maxPathSteps = int(700.0/angStep)
 if __name__ == "__main__":
-    seed1 = 0
+    minPoints = 30
     cos = numpy.cos(numpy.radians(90))
     sin = numpy.sin(numpy.radians(90))
+    seed = 5000
 
-    rg = RobotGrid(angStep, collisionBuffer, epsilon, seed1)
-    xPos, yPos = utils.hexFromDia(nDia, pitch=pitch)
-    for ii, (xp,yp) in enumerate(zip(xPos,yPos)):
-        xrot = cos * xp + sin * yp
-        yrot = sin * xp - cos * yp
-        print("%.8f, %.8f"%(xrot,yrot))
-        rg.addRobot(ii, xrot, yrot, hasApogee)
-    rg.initGrid()
-    for ii in range(rg.nRobots):
-        r = rg.getRobot(ii)
-        r.setXYUniform()
-    # set all positioners randomly (they are initialized at 0,0)
-    rg.decollide2()
-    rg.pathGen()
-    rg.smoothPaths(smoothPts) # must be odd
-    rg.simplifyPaths()
-    rg.setCollisionBuffer(collisionBuffer-collisionShrink)
-    rg.verifySmoothed()
+    while True:
+        seed += 1
+        print("trying seed", seed)
+        rg = RobotGrid(angStep, collisionBuffer, epsilon, seed)
+        xPos, yPos = utils.hexFromDia(nDia, pitch=pitch)
+        for ii, (xp,yp) in enumerate(zip(xPos,yPos)):
+            xrot = cos * xp + sin * yp
+            yrot = sin * xp - cos * yp
+            # print("%.8f, %.8f"%(xrot,yrot))
+            rg.addRobot(ii, xrot, yrot, hasApogee)
+        rg.initGrid()
+        for ii in range(rg.nRobots):
+            r = rg.getRobot(ii)
+            r.setXYUniform()
+        # set all positioners randomly (they are initialized at 0,0)
+        rg.decollide2()
+        rg.pathGen()
+        rg.smoothPaths(smoothPts) # must be odd
+        rg.simplifyPaths()
+        rg.setCollisionBuffer(collisionBuffer-collisionShrink)
+        rg.verifySmoothed()
 
-    for r in rg.allRobots:
-        plotTraj(r)
+        # find max beta path points
+        # only plot if we've found minimum
+        # amount of points
+        maxPts = 0
+        for r in rg.allRobots:
+            nPts = len(r.simplifiedBetaPath)
+            if nPts > maxPts:
+                maxPts = nPts
+
+        print("maxPts", maxPts)
+        if maxPts < minPoints:
+            continue
+
+        for r in rg.allRobots:
+            plotTraj(r)
+        break
 
 

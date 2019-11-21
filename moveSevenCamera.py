@@ -255,6 +255,8 @@ def centroid(imgData, positionerTargetsMM, plot=False):
     if nCentroids < nTargs:
         #allow missing centroids
         print("warning: more targets than centroids")
+    if nCentroids == 0:
+        raise RuntimeError("didn't find any centroids")
 
     # print("distMat shappe", distMat.shape)
     targArrayPx = numpy.array(list(positionerTargetsPx.values()))
