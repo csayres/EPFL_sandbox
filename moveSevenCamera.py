@@ -370,7 +370,7 @@ def multiImage():
             print("image took %.2f seconds"%(time.time()-tStart))
         imgList = numpy.array(imgList)
         print("imgList shape", imgList.shape)
-        stackedImg = numpy.sum(imgList, axis=0) / nImg
+        stackedImg = numpy.median(imgList, axis=0)# / nImg
         print("averaged shape", stackedImg.shape)
         centToTarget = centroid(stackedImg, targPos, plot=False)
         outputList.append(centToTarget)
