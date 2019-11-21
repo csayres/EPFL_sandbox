@@ -392,7 +392,9 @@ def singleImage():
     imgData = csCam.camera.getImage()
     output = centroid(imgData, targPos, plot=True)
 
-singleImage()
+# singleImage()
+
+multiImage()
 
 # plt.plot(nImages, outputList)
 
