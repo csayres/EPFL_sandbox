@@ -232,7 +232,7 @@ def centroid(imgData, positionerTargetsMM):
     centroidsPx = []
     for ctrData in ctrDataList:
         # need to index explicity because ctrData is actually an object
-        centroidsPx.append([ctrData.xyCtr[0], ctrData.xyCtr[1]])
+        centroidsPx.append(ctrData.xyCtr)
         xyCtr = ctrData.xyCtr
         rad = ctrData.rad
         counts = ctrData.counts
@@ -256,8 +256,8 @@ def centroid(imgData, positionerTargetsMM):
         print("warning: more targets than centroids")
 
     # print("distMat shappe", distMat.shape)
-    targArrayPx = numpy.array(positionerTargetsPx.values())
-    targIdArray = numpy.array(positionerTargetsPx.keys())
+    targArrayPx = numpy.array(list(positionerTargetsPx.values()))
+    targIdArray = numpy.array(list(positionerTargetsPx.keys()))
     # for each centroid give it a target
     cent2target = [] # holds targetIndex, and distance to target
     for cent in centroidsPx:
