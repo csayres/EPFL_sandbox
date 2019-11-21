@@ -353,37 +353,47 @@ async def main():
     logFile.close()
 
 # asyncio.run(main())
-rg = homeGrid()
+def multiImage():
+    rg = homeGrid()
 
-targPos = getTargetPositions(rg)
+    targPos = getTargetPositions(rg)
 
-# find number of images after which centroids become stable
-outputList = []
-nImages = list(range(1,10))
-for nImg in nImages:
-    print("trying nImg", nImg)
-    imgList = []
-    for i in range(nImg):
-        tStart = time.time()
-        imgList.append(csCam.camera.getImage())
-        print("image took %.2f seconds"%(time.time()-tStart))
-    imgList = numpy.array(imgList)
-    print("imgList shape", imgList.shape)
-    stackedImg = numpy.sum(imgList, axis=0) / nImg
-    print("averaged shape", stackedImg.shape)
-    centToTarget = centroid(stackedImg, targPos, plot=True)
-    outputList.append(centToTarget)
+    # find number of images after which centroids become stable
+    outputList = []
+    nImages = list(range(1,10))
+    for nImg in nImages:
+        print("trying nImg", nImg)
+        imgList = []
+        for i in range(nImg):
+            tStart = time.time()
+            imgList.append(csCam.camera.getImage())
+            print("image took %.2f seconds"%(time.time()-tStart))
+        imgList = numpy.array(imgList)
+        print("imgList shape", imgList.shape)
+        stackedImg = numpy.sum(imgList, axis=0) / nImg
+        print("averaged shape", stackedImg.shape)
+        centToTarget = centroid(stackedImg, targPos, plot=True)
+        outputList.append(centToTarget)
 
-outputList = numpy.array(outputList)
-print("outputList shape", outputList.shape)
+    outputList = numpy.array(outputList)
+    print("outputList shape", outputList.shape)
 
-# on plot per centroid
-plt.plot(nImages, )
-# plt.figure()
-for i in range(outputList.shape[1]):
-    plt.plot(nImages, outputList[:,i,1], label="cent %i"%i) # middle index is centroid number, last is distance
-plt.legend()
-plt.show()
+    # on plot per centroid
+    plt.plot(nImages, )
+    # plt.figure()
+    for i in range(outputList.shape[1]):
+        plt.plot(nImages, outputList[:,i,1], label="cent %i"%i) # middle index is centroid number, last is distance
+    plt.legend()
+    plt.show()
+
+def singleImage():
+    rg = homeGrid()
+    targPos = getTargetPositions(rg)
+    imgData = csCam.camera.getImage()
+    output = centroid(stackedImg, targPos, plot=True)
+
+singleImage()
+
 # plt.plot(nImages, outputList)
 
 # fp, rp = generatePath(1, movie=True)
