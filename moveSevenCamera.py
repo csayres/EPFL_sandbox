@@ -363,6 +363,8 @@ for nImg in nImages:
         tStart = time.time()
         imgList.append(csCam.camera.getImage())
         print("image took %.2f seconds"%(time.time()-tStart))
+    imgList = numpy.array(imgList)
+    print("imgList shape", imgList.shape)
     stackedImg = numpy.sum(axis=2) / nImg
     centToTarget = centroid(stackedImg, targPos)
     outputList.append(centToTarget)
