@@ -267,7 +267,7 @@ def centroid(imgData, positionerTargetsMM, plot=False):
     for centInd, cent in enumerate(centroidsPx):
         # a row of disntances for this target
         distArr = numpy.array([numpy.linalg.norm(targ-cent) for targ in targArrayPx])
-        targInd = numpy.argmin(distArr)
+        targInd = int(numpy.argmin(distArr))
         cent2target.append([centInd, targInd, distArr[targInd]])
     cent2target = numpy.array(cent2target)
     # for paranoia, remove any targets with distance greater than the ROI,
