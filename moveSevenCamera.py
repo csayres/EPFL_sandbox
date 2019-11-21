@@ -29,7 +29,11 @@ epsilon = angStep * 2
 collisionBuffer = 2
 collisionShrink = 0.02
 doPlot = False
-roiRadius = 50 # pixels
+
+# set roi width to 0.5 mm (within a beta arm)
+# we should only get one detection
+roiRadius = 0.25 / csCam.SCALEFACTOR
+print("roi Radius", roiRadius)
 detectThresh = 200
 
 CCDInfo = PyGuide.CCDInfo(
@@ -224,7 +228,9 @@ def centroid(imgData, positionerTargetsMM):
         verbosity = 0,
         doDS9 = False,
     )[0:2]
+    centroidsPx = []
     for ctrData in ctrDataList:
+        centroidsPx.append(ctrData.xyCtr)
         xyCtr = ctrData.xyCtr
         rad = ctrData.rad
         counts = ctrData.counts
