@@ -9,6 +9,7 @@ from kaiju import RobotGrid
 import matplotlib.pyplot as plt
 import numpy
 from collections import OrderedDict
+import pickle
 
 from trajPlotter import plotTraj
 from movieExample import plotMovie
@@ -400,21 +401,25 @@ def multiImage():
     # plt.legend()
     plt.show()
 
-def measureDisplacement():
+def measureDisplacement(fromFile=False):
     rg = homeGrid()
     targPos = getTargetPositions(rg)
-    imgDataList = []
-    for i in range(nImgAvg):
-        imgDataList.append(csCam.camera.getImage())
-    imgDataList = numpy.array(imgDataList)
-    imgData = numpy.sum(imgDataList, axis=0) / nImgAvg
-    import pickle
-    f = open("imgData.pkl", "wb")
-    pickle.dump(imgData, f)
-    f.close()
+    if fromFile:
+        f = open("imgData.pkl", "rb")
+        imgData = pickle.load(f)
+        f.close()
+    else:
+        imgDataList = []
+        for i in range(nImgAvg):
+            imgDataList.append(csCam.camera.getImage())
+        imgDataList = numpy.array(imgDataList)
+        imgData = numpy.sum(imgDataList, axis=0) / nImgAvg
+        f = open("imgData.pkl", "wb")
+        pickle.dump(imgData, f)
+        f.close()
     output = centroid(imgData, targPos, plot=True)
 
-measureDisplacement()
+measureDisplacement(fromFile=True)
 
 # multiImage()
 
