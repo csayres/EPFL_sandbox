@@ -382,7 +382,8 @@ def multiImage():
     # plt.figure()
     fig, axs = plt.subplots(outputList.shape[1], 1)
     for i, ax in enumerate(axs):
-        ax.plot(nImages, outputList[:,i,1] * csCam.SCALE_FACTOR * 1000, label="cent %i"%i) # middle index is centroid number, last is distance
+        microns = outputList[:,i,1] * csCam.SCALE_FACTOR * 1000
+        ax.plot(nImages, microns - numpy.mean(microns), label="cent %i"%i) # middle index is centroid number, last is distance
     plt.ylabel("microns")
     plt.xlabel("n images averaged")
     # plt.legend()
