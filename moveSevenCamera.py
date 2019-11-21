@@ -261,7 +261,7 @@ def centroid(imgData, positionerTargetsMM, plot=False):
 
     # print("distMat shappe", distMat.shape)
     targArrayPx = numpy.array(list(positionerTargetsPx.values()))
-    targIdArray = numpy.array(list(positionerTargetsPx.keys()))
+    targIdArray = list(positionerTargetsPx.keys())
     # for each centroid give it a target
     cent2target = [] # holds centroidIndex, targetIndex, and distance to target in px
     for centInd, cent in enumerate(centroidsPx):
