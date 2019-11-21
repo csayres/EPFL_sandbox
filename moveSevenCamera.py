@@ -390,7 +390,7 @@ def singleImage():
     rg = homeGrid()
     targPos = getTargetPositions(rg)
     imgData = csCam.camera.getImage()
-    output = centroid(stackedImg, targPos, plot=True)
+    output = centroid(imgData, targPos, plot=True)
 
 singleImage()
 
