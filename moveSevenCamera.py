@@ -247,21 +247,33 @@ def centroid(imgData, positionerTargetsMM):
 
     # calculate distances between all targets and all centroids
     if nCentroids > nTargs:
-        print("warning: more centroids than targets")
+        # don't allow false positives
+        raise RuntimeError("more centroids than targets")
     if nCentroids < nTargs:
+        #allow missing centroids
         print("warning: more targets than centroids")
 
-    # associate each target with the best centroid
-    # create a matrix of distances
-    distMat = numpy.zeros((nTargs, nCentroids))
     # print("distMat shappe", distMat.shape)
-    for tInd, targ in enumerate(positionerTargetsPx.values()):
+    targArrayPx = numpy.array(positionerTargetsPx.values())
+    targIdArray = numpy.array(positionerTargetsPx.keys())
+    # for each centroid give it a target
+    cent2target = [] # holds targetIndex, and distance to target
+    for cent in centroidsPx:
         # a row of disntances for this target
-        dist = numpy.array([numpy.linalg.norm(targ-cent) for cent in centroidsPx])
-        # print("targ shape", targ.shape)
-        # print("centroid shape", centroidsPx.shape)
-        # print("dist shape", dist.shape)
-        distMat[tInd] = dist
+        distArr = numpy.array([numpy.linalg.norm(targ-cent) for targ in targArrayPx])
+        targInd = numpy.argmin(distArr)
+        cent2target.append([targInd, distArr[targInd]])
+
+    for cInd, (tInd, dist) in enumerate(cent2target):
+        print("centroid %i gets target %i at distance %.2f pixels"%(cInd, tInd, dist))
+
+
+
+
+
+
+    # find the best target for each centroids
+
 
     print("distMat", distMat)
     # plt.plot(xROI, yROI, "ok")
