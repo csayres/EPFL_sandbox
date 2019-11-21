@@ -267,7 +267,7 @@ def centroid(imgData, positionerTargetsMM, plot=False):
     for centInd, cent in enumerate(centroidsPx):
         # a row of disntances for this target
         distArr = numpy.array([numpy.linalg.norm(targ-cent) for targ in targArrayPx])
-        targInd = int(numpy.argmin(distArr))
+        targInd = numpy.argmin(distArr)
         cent2target.append([centInd, targInd, distArr[targInd]])
     cent2target = numpy.array(cent2target)
     # for paranoia, remove any targets with distance greater than the ROI,
@@ -280,10 +280,12 @@ def centroid(imgData, positionerTargetsMM, plot=False):
     # calculate the offsets (vector from centroid to target)
     # in kaiju's reference frame in mm
     for cInd, tInd, dist in cent2target:
+        tInd = int(tInd)
+        cInd = int(cInd)
         posID = targIdArray[tInd]
         targPix = targArrayPx[tInd]
         centPix = centroidsPx[cInd]
-        print("dist %i %.2f"%(posID, numpy.linalg.norm(targPix-centPix)))
+        print("dist %i %.2f precomputed %.2f"%(posID, numpy.linalg.norm(targPix-centPix), dist))
 
     plt.close()
     return numpy.array(cent2target)
