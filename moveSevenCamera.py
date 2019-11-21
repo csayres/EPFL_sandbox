@@ -374,7 +374,13 @@ for nImg in nImages:
 
 outputList = numpy.array(outputList)
 print("outputList shape", outputList.shape)
+
+# on plot per centroid
+plt.plot(nImages, )
 # plt.figure()
+for i in range(outputList.shape[1]):
+    plt.plot(nImages, outputList[:,i,1]) # middle index is centroid number, last is distance
+plt.show()
 # plt.plot(nImages, outputList)
 
 # fp, rp = generatePath(1, movie=True)
