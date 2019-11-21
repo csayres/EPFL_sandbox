@@ -254,9 +254,13 @@ def centroid(imgData, positionerTargetsMM):
     # associate each target with the best centroid
     # create a matrix of distances
     distMat = numpy.zeros((nTargs, nCentroids))
+    print("distMat shappe", distMat.shape)
     for tInd, targ in enumerate(positionerTargetsPx.values()):
+        # a row of disntances for this target
+        dist = numpy.array([numpy.linalg.norm(targ-cent) for cent in centroidsPx])
         print("targ shape", targ.shape)
         print("centroid shape", centroidsPx.shape)
+        print("dist shape", dist.shape)
 
     # plt.plot(xROI, yROI, "ok")
     plt.show()
