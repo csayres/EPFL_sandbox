@@ -30,6 +30,7 @@ collisionBuffer = 2
 collisionShrink = 0.02
 doPlot = False
 roiRadius = 50 # pixels
+detectThresh = 200
 
 CCDInfo = PyGuide.CCDInfo(
     bias = 2,    # image bias, in ADU
@@ -177,33 +178,52 @@ def generatePath(rg, plot=False, movie=False, fileIndex=0):
 
     return forwardPath, reversePath
 
-def centroid(imgData, xyKaijuMM):
+def centroid(imgData, positionerTargets):
     # xy center in mm kaiju coord sys
     imgData = imgData[::-1,:]
-    mask = numpy.zeros(imgData.shape)
-    # take abs value of positioner because it's y axis is defined
-    # negative (loic's positions are measured from top left)
-    xyImageMM = numpy.dot(xyKaijuMM, rot2image) + numpy.abs(centerXYMM)
-    xGuess, yGuess = xyImageMM / csCam.SCALE_FACTOR
-    xROI = numpy.int(numpy.floor(xGuess))
-    yROI = numpy.int(numpy.floor(yGuess))
-    startRow = xROI - roiRadius
-    if startRow < 0:
-        startRow = 0
-    endRow = xROI + roiRadius
-    if endRow > imgData.shape[1]:
-        endRow = imgData.shape[1]
+    mask = numpy.zeros(imgData.shape) + 1
+    # build the mask, draw squares around expected positions
+    for posID, xyKaijuMM in positionerTarges.items():
+        # take abs value of positioner because it's y axis is defined
+        # negative (loic's positions are measured from top left)
+        xyImageMM = numpy.dot(xyKaijuMM, rot2image) + numpy.abs(centerXYMM)
+        xGuess, yGuess = xyImageMM / csCam.SCALE_FACTOR
+        # rotate into reference frame with 0,0 at bottom left
+        xROI = numpy.int(numpy.floor(xGuess))
+        yROI = numpy.int(numpy.floor(yGuess))
+        startRow = xROI - roiRadius
+        if startRow < 0:
+            startRow = 0
+        endRow = xROI + roiRadius
+        if endRow > imgData.shape[1]:
+            endRow = imgData.shape[1]
 
-    startCol = yROI - roiRadius
-    if startCol < 0:
-        startCol = 0
-    endCol = yROI + roiRadius
-    if endCol > imgData.shape[0]:
-        endCol = imgData.shape[0]
+        startCol = yROI - roiRadius
+        if startCol < 0:
+            startCol = 0
+        endCol = yROI + roiRadius
+        if endCol > imgData.shape[0]:
+            endCol = imgData.shape[0]
 
-    mask[startCol:endCol, startRow:endRow] = 200
+        mask[startCol:endCol, startRow:endRow] = 0
 
     plt.imshow(imgData + mask, origin="lower")
+    ctrDataList, imStats = PyGuide.findStars(
+        data = imgData,
+        mask = mask,
+        satMask = None,
+        thresh=detectThresh,
+        ccdInfo = CCDInfo,
+        verbosity = 0,
+        doDS9 = False,
+    )[0:2]
+    for ctrData in ctrDataList:
+        xyCtr = ctrData.xyCtr
+        rad = ctrData.rad
+        counts = ctrData.counts
+        plt.plot(xyCtr[0], xyCtr,[1], 'or', alpha=0.2)
+        print("star xyCtr=%.2f, %.2f, radius=%s counts=%.2f" % (xyCtr[0], xyCtr[1], rad, counts))
+
     # plt.plot(xROI, yROI, "ok")
     plt.show()
     # plt.savefig("test.tiff")
@@ -284,8 +304,7 @@ targPos = getTargetPositions(rg)
 
 imgData = csCam.camera.getImage()
 
-for robotID in [24, 16, 20]:
-    centroid(imgData, targPos[robotID])
+centroid(imgData, targPos)
 
 
 # fp, rp = generatePath(1, movie=True)
