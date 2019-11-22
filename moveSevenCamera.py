@@ -411,7 +411,7 @@ async def main():
                 nextAlpha, nextBeta = r.alphaBetaFromFiberXY(nextFiberX, nextFiberY, metFiberID)
                 alphaOff = nextAlpha - alphaLast
                 betaOff = nextBeta - betaLast
-                if numpy.max(numpy.abs([alphaOff, betaOff])) > 2:
+                if numpy.max(numpy.abs([alphaOff, betaOff])) > 10:
                     print("max alpha beta offsets are too high: %.2f, %.2f"%(alphaOff, betaOff))
                     continue
                 positionerAlphaBeta[r.id] = [nextAlpha, nextBeta]
