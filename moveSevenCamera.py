@@ -380,7 +380,7 @@ async def main():
         # command 5 repositioning moves
         positionerAlphaBeta = OrderedDict()
         for r in rg.allRobots:
-            positionerAlphaBeta[r.id] = [r.alphaPath[0], r.betaPath[0]]
+            positionerAlphaBeta[r.id] = [r.alphaPath[0][1], r.betaPath[0][1]]
 
         for posIter in range(5):
             # measure the positions of all the guys use 4 images for centroid
