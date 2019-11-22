@@ -347,7 +347,8 @@ async def main():
     logFile = open("moveSevenCamera.log", "w")
     while True:
         seed += 1
-        rg = safeGrid()
+        # rg = safeGrid()
+        rg = newGrid(seed)
 
         # grab the targets
         targetPositions = getTargetPositions(rg)
@@ -427,7 +428,6 @@ async def main():
         if fps.locked:
             logFile.write("FPS is locked! exiting\n")
             break
-        break
         # Cleanly finish all pending tasks and exit
     await fps.shutdown()
     logFile.close()
