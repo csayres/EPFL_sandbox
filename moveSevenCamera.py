@@ -268,7 +268,7 @@ def centroid(imgData, positionerTargetsMM, plot=False):
         rad = ctrData.rad
         counts = ctrData.counts
         plt.plot(xyCtr[0], xyCtr[1], 'or', markersize=10, fillstyle="none")#, alpha=0.2)
-        print("star xyCtr=%.2f, %.2f, radius=%s counts=%.2f" % (xyCtr[0], xyCtr[1], rad, counts))
+        # print("star xyCtr=%.2f, %.2f, radius=%s counts=%.2f" % (xyCtr[0], xyCtr[1], rad, counts))
     # plot the desired targets
     centroidsPx = numpy.asarray(centroidsPx)
     nTargs = len(positionerTargetsPx.values())
@@ -319,7 +319,7 @@ def centroid(imgData, positionerTargetsMM, plot=False):
         offPx = targPix - centPix
         offMM = numpy.dot(offPx * scaleFac, rot2kaiju)
         positionerOffsets[posID] = offMM
-        print("dist %i %.2f precomputed %.2f"%(posID, numpy.linalg.norm(targPix-centPix), dist))
+        # print("dist %i %.2f precomputed %.2f"%(posID, numpy.linalg.norm(targPix-centPix), dist))
 
     plt.close()
     return positionerOffsets
