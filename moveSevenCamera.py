@@ -332,7 +332,7 @@ def centroid(imgData, positionerTargetsMM, plot=False):
 async def main():
 
     # Set logging level to DEBUG
-    log.set_level(20)
+    # log.set_level()
 
     # Initialise the FPS instance.
     # fps = FPS(layout="grid7.txt")
@@ -360,14 +360,14 @@ async def main():
             print("path deadlocked skip it")
             continue
 
-        # maxSteps = 0
-        # for abDict in fp.values():
-        #     nPts = len(abDict["beta"])
-        #     if nPts > maxSteps:
-        #         maxSteps = nPts
-        # if maxSteps < 50:
-        #     print("skipping un interesting path")
-        #     continue
+        maxSteps = 0
+        for abDict in fp.values():
+            nPts = len(abDict["beta"])
+            if nPts > maxSteps:
+                maxSteps = nPts
+        if maxSteps < 50:
+            print("skipping un interesting path")
+            continue
 
         # send all to 0 180
         gotoHome = [fps[rID].goto(alpha=0, beta=180) for rID in posDict.keys()]
