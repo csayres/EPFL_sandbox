@@ -71,35 +71,26 @@ rot2image = numpy.array([
     [c90, -s90],
     [s90, c90]
 ])
+posDict = OrderedDict()
+# modify the coordinates below with every new calibration
+# these are calibration outputs measured in mm from top left
+# looking at the robot grid
+# (** NOTE THE NEGATIVE Y VALUES!)
+# (** NOTE put positioners in ascending order of ID)
+posDict[16] = numpy.array([50.33, -26.13])
+posDict[17] = numpy.array([61.39, -45.68])
+posDict[19] = numpy.array([50.08, -64.74])
+posDict[20] = numpy.array([72.56, -64.95])
+posDict[21] = numpy.array([83.87, -45.58])
+posDict[24] = numpy.array([38.95, -45.28])
+posDict[25] = numpy.array([72.78, -26.42])
 
-
-
-def getGetPositionerData():
-    posDict = OrderedDict()
-
-    # modify the coordinates below with every new calibration
-    # these are calibration outputs measured in mm from top left
-    # looking at the robot grid
-    # (** NOTE THE NEGATIVE Y VALUES!)
-    # (** NOTE put positioners in ascending order of ID)
-    posDict[16] = numpy.array([50.33, -26.13])
-    posDict[17] = numpy.array([61.39, -45.68])
-    posDict[19] = numpy.array([50.08, -64.74])
-    posDict[20] = numpy.array([72.56, -64.95])
-    posDict[21] = numpy.array([83.87, -45.58])
-    posDict[24] = numpy.array([38.95, -45.28])
-    posDict[25] = numpy.array([72.78, -26.42])
-
-    centerXY = posDict[centerPositioner]
-    # rotate grid such that it is aligned with
-    # kaiju's definition (alpha=0 is aligned with +x)
-    for key in posDict.keys():
-        fromMiddle = posDict[key] - centerXY
-        posDict[key] = numpy.dot(fromMiddle, rot2kaiju)
-        # print("pos", key, posDict[key])
-    return centerXY, posDict
-
-centerXYMM, posDict = getGetPositionerData()
+centerXYMM = posDict[centerPositioner]
+# rotate grid such that it is aligned with
+# kaiju's definition (alpha=0 is aligned with +x)
+for key in posDict.keys():
+    fromMiddle = posDict[key] - centerXYMM
+    posDict[key] = numpy.dot(fromMiddle, rot2kaiju)
 ###############################################################
 
 def newGrid(seed=0):
@@ -379,7 +370,7 @@ async def unwindGrid(fps):
 
     await fps.send_trajectory(reversePath)
 
-async def cameraFeedback(rg, fps):
+async def cameraFeedback(rg, fps, targetPositions):
     """Implement a sequence of correction moves based on camera feedback
     """
     positionerAlphaBeta = OrderedDict()
@@ -462,7 +453,7 @@ async def runPathPair(fps, seed=0, doComplicated=False, doCentroid=False):
 
 
     if doCentroid:
-        await cameraFeedback(rg, fps)
+        await cameraFeedback(rg, fps, targetPositions)
 
     print("reverse path going")
     await fps.send_trajectory(reversePath)
