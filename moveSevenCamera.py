@@ -389,7 +389,7 @@ async def main():
                 imgDataList.append(csCam.camera.getImage())
             # centroid on the average image
             imgData = numpy.sum(imgDataList, axis=0) / nImgAvg
-            positionerOffsets = centroid(imgData, targetPositions, plot=True)
+            positionerOffsets = centroid(imgData, targetPositions, plot=False)
             # print the position errors in microns
             for r in rg.allRobots:
                 try:
