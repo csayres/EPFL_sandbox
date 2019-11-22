@@ -441,7 +441,7 @@ async def runPathPair(fps, seed=0, doComplicated=False, doCentroid=False):
         if maxSteps < complicatedThreshold:
             print("skipping un interesting path")
             # exit function here
-            return False
+            return
 
     # send all to 0 180
     gotoHome = [fps[rID].goto(alpha=0, beta=180) for rID in posDict.keys()]
@@ -458,9 +458,7 @@ async def runPathPair(fps, seed=0, doComplicated=False, doCentroid=False):
     print("reverse path going")
     await fps.send_trajectory(reversePath)
 
-    return True
-
-
+    return
 
 
 async def main(
@@ -490,13 +488,15 @@ async def main(
     # Print the status of positioner 4
     # print("FPS status", fps[robotID].status)
     while True:
-        trialNumber += 1
+        #
         await runPathPair(fps, seed, doComplicated, doCentroid)
         if fps.locked:
             print("FPS is locked! exiting\n")
             break
         if not continuous:
             break
+        trialNumber += 1
+        seed += 1
         # Cleanly finish all pending tasks and exit
     await fps.shutdown()
 
