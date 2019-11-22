@@ -476,7 +476,7 @@ async def main(
     await unwindGrid(fps)
 
     if unwindOnly:
-        print("shutting down fps")
+        print("unwind only, shutting down fps")
         await fps.shutdown()
         return
 
