@@ -502,13 +502,12 @@ async def main(
         trialNumber += 1
         await runPathPair(fps, seed, doComplicated, doCentroid)
         if fps.locked:
-            logFile.write("FPS is locked! exiting\n")
+            print("FPS is locked! exiting\n")
             break
         if not continuous:
             break
         # Cleanly finish all pending tasks and exit
     await fps.shutdown()
-    logFile.close()
 
 if __name__ == "__main__":
     seed=None,
