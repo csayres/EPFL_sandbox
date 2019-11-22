@@ -483,6 +483,8 @@ def measureDisplacement(fromFile=False):
         f.close()
     output = centroid(imgData, targPos, plot=True)
 
+asyncio.run(main())
+
 # measureDisplacement(fromFile=True)
 
 # multiImage()
