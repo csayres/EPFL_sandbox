@@ -458,7 +458,6 @@ async def runPathPair(fps, seed=0, doComplicated=False, doCentroid=False):
     print("reverse path going")
     await fps.send_trajectory(reversePath)
 
-    return
 
 
 async def main(
