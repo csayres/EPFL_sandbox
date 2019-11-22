@@ -494,7 +494,7 @@ async def main(
     # if seed is None, pick a random one
     # if continuous is on, this will be the starting point
     # seeds will be incremented
-    if seed is None
+    if seed is None:
         seed = numpy.random.randint(0, 30000)
     # Print the status of positioner 4
     # print("FPS status", fps[robotID].status)
