@@ -188,6 +188,7 @@ def generatePath(rg, plot=False, movie=False, fileIndex=0):
         betaTimesR = ibp[:,0] * angStep / RobotMaxSpeed
         betaDegR = ibp[:,1]
 
+
         # add time buffer for the reverse path, because we are
         # iterating final placement after the forward path
         # this ensures the robot first moves to the position
@@ -204,9 +205,10 @@ def generatePath(rg, plot=False, movie=False, fileIndex=0):
         betaTimesF = numpy.abs(betaTimesR-betaTimesR[-1])[::-1]
         betaDegF = betaDegR[::-1]
 
-        armPathF = {} # reverse path
+        armPathF = {}
         armPathF["alpha"] = [(pos, time) for pos, time in zip(alphaDegF, alphaTimesF)]
         armPathF["beta"] = [(pos, time) for pos, time in zip(betaDegF, betaTimesF)]
+
 
         forwardPath[robotID] = armPathF
 
@@ -373,7 +375,7 @@ async def main():
         logFile.write("starting forward trajectory seed=%i trial=%i collisionBuffer=%.2f\n"%(seed, trialNumber, collisionBuffer))
 
         print("forward path going")
-        await fps.send_trajectory(fp, False)
+        await fps.send_trajectory(fp)
         print("trajectory done")
         # command 5 repositioning moves
         positionerAlphaBeta = OrderedDict()
@@ -418,7 +420,7 @@ async def main():
         logFile.write("starting reverse trajectory seed=%i trial=%i collisionBuffer=%.2f\n"%(seed, trialNumber, collisionBuffer))
 
         print("reverse path")
-        await fps.send_trajectory(rp, False)
+        await fps.send_trajectory(rp)
         print("trajectory done")
         trialNumber += 1
 
