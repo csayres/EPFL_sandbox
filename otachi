@@ -93,7 +93,7 @@ for key in posDict.keys():
     posDict[key] = numpy.dot(fromMiddle, rot2kaiju)
 ###############################################################
 
-def newGrid(seed=0):
+def newGrid(seed=0, alphaLimit=None):
     """Return an initialized RobotGrid with positioners
     set to random target positions.  The same seed will produce the
     same grid always, as long as the kaiju parameters (eg collisionBuffer)
@@ -107,10 +107,22 @@ def newGrid(seed=0):
         rg.addRobot(posID, xp, yp, hasApogee)
     rg.initGrid()
 
-    for ii in range(rg.nRobots):
-        r = rg.getRobot(ii)
-        r.setXYUniform()
-    rg.decollide2()
+    while True:
+        for ii in range(rg.nRobots):
+            r = rg.getRobot(ii)
+            r.setXYUniform()
+        rg.decollide2()
+        if alphaLimit is None:
+            break
+        # check all alphas are below limits
+        alphaOK = True
+        for r in rg.allRobots:
+            if r.alpha > alphaLimit:
+                print("alpha over limits, trying again")
+                alphaOK = False
+                break
+        if alphaOK:
+            break
     return rg
 
 def homeGrid():
@@ -412,7 +424,7 @@ async def cameraFeedback(rg, fps, targetPositions):
             positionerAlphaBeta[r.id] = [nextAlpha, nextBeta]
             await fps[r.id].goto(alpha=nextAlpha, beta=nextBeta)
 
-async def runPathPair(fps, seed=0, doComplicated=False, doCentroid=False):
+async def runPathPair(fps, seed=0, doComplicated=False, doCentroid=False, alphaLimit=None):
     """Command FPS to do 3 moves:
     1st move: all positioners to 0, 180 (warning, no check for safety is done!)
     2nd move: forward path to targets found based on seed input
@@ -427,7 +439,7 @@ async def runPathPair(fps, seed=0, doComplicated=False, doCentroid=False):
     # minimum number of trajectory points for a complicated path
     complicatedThreshold = 50
 
-    rg = newGrid(seed)
+    rg = newGrid(seed, alphaLimit)
     targetPositions = getTargetPositions(rg)
     print("otachi, seed=%i, collisionBuffer=%.4f"%(seed, collisionBuffer))
     forwardPath, reversePath = generatePath(rg) # this will runtime error if failed
@@ -466,6 +478,7 @@ async def main(
         continuous=False,
         unwindOnly=False,
         doComplicated=False,
+        alphaLimit=None,
         ):
     fps = FPS()
     await fps.initialise()
@@ -489,8 +502,8 @@ async def main(
     # Print the status of positioner 4
     # print("FPS status", fps[robotID].status)
     while True:
-        print("running pair of paths")
-        await runPathPair(fps, seed, doComplicated, doCentroid)
+        print("running pair of paths seed = %i"%seed)
+        await runPathPair(fps, seed, doComplicated, doCentroid, alphaLimit)
         if fps.locked:
             print("FPS is locked! exiting\n")
             break
@@ -503,11 +516,12 @@ async def main(
 
 if __name__ == "__main__":
     seed = 1
-    doCentroid = True
+    doCentroid = False
     continuous = True
     unwindOnly = False
     doComplicated = False
-    asyncio.run(main(seed, doCentroid, continuous, unwindOnly, doComplicated))
+    alphaLimit = 340 # degrees
+    asyncio.run(main(seed, doCentroid, continuous, unwindOnly, doComplicated, alphaLimit))
 
 
 
