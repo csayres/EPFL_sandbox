@@ -476,6 +476,7 @@ async def main(
     await unwindGrid(fps)
 
     if unwindOnly:
+        print("shutting down fps")
         await fps.shutdown()
         return
 
@@ -488,7 +489,7 @@ async def main(
     # Print the status of positioner 4
     # print("FPS status", fps[robotID].status)
     while True:
-        #
+        print("running pair of paths")
         await runPathPair(fps, seed, doComplicated, doCentroid)
         if fps.locked:
             print("FPS is locked! exiting\n")
