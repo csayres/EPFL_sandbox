@@ -426,6 +426,8 @@ async def main():
 
         if fps.locked:
             logFile.write("FPS is locked! exiting\n")
+            break
+        break
         # Cleanly finish all pending tasks and exit
     await fps.shutdown()
     logFile.close()
