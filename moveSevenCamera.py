@@ -192,7 +192,7 @@ def generatePath(rg, plot=False, movie=False, fileIndex=0):
         # add time buffer for the reverse path, because we are
         # iterating final placement after the forward path
         # this ensures the robot first moves to the position
-        # computed by kaiju before folding.
+        # computed by kaiju before following the folding path.
         armPathR = {} # reverse path
         armPathR["alpha"] = [(pos, time+0.5) for pos, time in zip(alphaDegR, alphaTimesR)]
         armPathR["beta"] = [(pos, time+0.5) for pos, time in zip(betaDegR, betaTimesR)]
