@@ -503,11 +503,11 @@ async def main(
     await fps.shutdown()
 
 if __name__ == "__main__":
-    seed = None
+    seed = 1
     doCentroid = True
     continuous = True
     unwindOnly = False
-    doComplicated = True
+    doComplicated = False
     asyncio.run(main(seed, doCentroid, continuous, unwindOnly, doComplicated))
 
 
