@@ -515,9 +515,9 @@ async def main(
     await fps.shutdown()
 
 if __name__ == "__main__":
-    seed = 1
+    seed = 8
     doCentroid = False
-    continuous = True
+    continuous = False
     unwindOnly = False
     doComplicated = False
     alphaLimit = 340 # degrees
