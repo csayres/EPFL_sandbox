@@ -343,7 +343,7 @@ async def main():
     # print("FPS status", fps[robotID].status)
 
     trialNumber = 0
-    seed = 0
+    seed = 5000
     logFile = open("moveSevenCamera.log", "w")
     while True:
         seed += 1
