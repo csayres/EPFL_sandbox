@@ -1,5 +1,7 @@
 import sys
-sys.path.append("/home/tendo/work/python/EPFL_sandbox/calibLoic")
+import os
+import matplotlib
+
 
 import asyncio
 from jaeger import FPS, log
@@ -13,11 +15,17 @@ import pickle
 
 from trajPlotter import plotTraj
 from movieExample import plotMovie
-from calibLoic import csCam
 import PyGuide
 
-import matplotlib
-matplotlib.use("TkAgg")
+tendoPath = "/home/tendo/work/python/EPFL_sandbox/calibLoic"
+if os.path.exists(tendoPath):
+    sys.path.append(tendoPath)
+    from calibLoic import csCam
+    scaleFac = csCam.SCALE_FACTOR
+    matplotlib.use("TkAgg")
+else:
+    scaleFac = 0.033333 # MM / px
+    matplotlib.use("macosx")
 
 # seed 7 robot 0 is problematic (truncation on beta didn't work)
 # seed 529 smoothing failed with  78
@@ -35,7 +43,7 @@ nImgAvg = 4
 # set roi width to 0.5 mm (within a beta arm)
 # we should only get one detection
 roiRadiusMM = 0.75
-roiRadiusPx = int(numpy.floor(roiRadiusMM / csCam.SCALE_FACTOR))
+roiRadiusPx = int(numpy.floor(roiRadiusMM / scaleFac))
 print("roi Radius", roiRadiusPx)
 detectThresh = 150
 
@@ -111,6 +119,21 @@ def homeGrid():
     rg.decollide2()
     return rg
 
+def safeGrid():
+    hasApogee = True
+    seed = 0
+    rg = RobotGrid(angStep, collisionBuffer, epsilon, seed)
+
+    for posID, (xp, yp) in posDict.items():
+        rg.addRobot(posID, xp, yp, hasApogee)
+    rg.initGrid()
+
+    for ii in range(rg.nRobots):
+        r = rg.getRobot(ii)
+        r.setAlphaBeta(45, 90)
+    rg.decollide2()
+    return rg
+
 def getTargetPositions(rg):
     ## return target positions for positioners in mm
     # in kaiju's coord system (mm)
@@ -165,9 +188,13 @@ def generatePath(rg, plot=False, movie=False, fileIndex=0):
         betaTimesR = ibp[:,0] * angStep / RobotMaxSpeed
         betaDegR = ibp[:,1]
 
+        # add time buffer for the reverse path, because we are
+        # iterating final placement after the forward path
+        # this ensures the robot first moves to the position
+        # computed by kaiju before folding.
         armPathR = {} # reverse path
-        armPathR["alpha"] = [(pos, time) for pos, time in zip(alphaDegR, alphaTimesR)]
-        armPathR["beta"] = [(pos, time) for pos, time in zip(betaDegR, betaTimesR)]
+        armPathR["alpha"] = [(pos, time+0.5) for pos, time in zip(alphaDegR, alphaTimesR)]
+        armPathR["beta"] = [(pos, time+0.5) for pos, time in zip(betaDegR, betaTimesR)]
 
         reversePath[robotID] = armPathR
 
@@ -196,7 +223,7 @@ def centroid(imgData, positionerTargetsMM, plot=False):
         # take abs value of positioner because it's y axis is defined
         # negative (loic's positions are measured from top left)
         xyImageMM = numpy.dot(xyKaijuMM, rot2image) + numpy.abs(centerXYMM)
-        xTargetPx, yTargetPx = xyImageMM / csCam.SCALE_FACTOR
+        xTargetPx, yTargetPx = xyImageMM / scaleFac
         positionerTargetsPx[posID] = numpy.array([xTargetPx, yTargetPx])
         # rotate into reference frame with 0,0 at bottom left
         xROI = numpy.int(numpy.floor(xTargetPx))
@@ -280,16 +307,20 @@ def centroid(imgData, positionerTargetsMM, plot=False):
 
     # calculate the offsets (vector from centroid to target)
     # in kaiju's reference frame in mm
+    positionerOffsets = OrderedDict()
     for cInd, tInd, dist in cent2target:
         tInd = int(tInd)
         cInd = int(cInd)
         posID = targIdArray[tInd]
         targPix = targArrayPx[tInd]
         centPix = centroidsPx[cInd]
+        offPx = targPix - centPix
+        offMM = numpy.dot(offPx * scaleFac, rot2kaiju)
+        positionerOffsets[posID] = offMM
         print("dist %i %.2f precomputed %.2f"%(posID, numpy.linalg.norm(targPix-centPix), dist))
 
     plt.close()
-    return numpy.array(cent2target)
+    return positionerOffsets
     # find the best target for each centroids
 
     # plt.plot(xROI, yROI, "ok")
@@ -314,7 +345,7 @@ async def main():
     logFile = open("moveSevenCamera.log", "w")
     while True:
         seed += 1
-        rg = newGrid(seed)
+        rg = safeGrid()
 
         # grab the targets
         targetPositions = getTargetPositions(rg)
@@ -326,14 +357,14 @@ async def main():
             print("path deadlocked skip it")
             continue
 
-        maxSteps = 0
-        for abDict in fp.values():
-            nPts = len(abDict["beta"])
-            if nPts > maxSteps:
-                maxSteps = nPts
-        if maxSteps < 50:
-            print("skipping un interesting path")
-            continue
+        # maxSteps = 0
+        # for abDict in fp.values():
+        #     nPts = len(abDict["beta"])
+        #     if nPts > maxSteps:
+        #         maxSteps = nPts
+        # if maxSteps < 50:
+        #     print("skipping un interesting path")
+        #     continue
 
         # send all to 0 180
         gotoHome = [fps[rID].goto(alpha=0, beta=180) for rID in posDict.keys()]
@@ -344,12 +375,45 @@ async def main():
         print("forward path going")
         await fps.send_trajectory(fp, False)
         print("trajectory done")
-        time.sleep(1)
-        # measure the positions of all the guys
+        # command 5 repositioning moves
+        positionerAlphaBeta = OrderedDict()
+        for r in rg.allRobots:
+            positionerAlphaBeta[r.id] = [r.alphaPath[0], r.betaPath[0]]
 
-        imgData = csCam.camera.getImage()
+        for posIter in range(5):
+            # measure the positions of all the guys use 4 images for centroid
+            imgDataList = []
+            for imageIter in range(nImgAvg):
+                imgDataList.append(csCam.camera.getImage())
+            # centroid on the average image
+            imgData = numpy.sum(imgDataList, axis=0) / nImgAvg
+            positionerOffsets = centroid(imgData, targetPositions, plot=True)
+            # print the position errors in microns
+            for r in rg.allRobots:
+                try:
+                    xOffMM, yOffMM = positionerOffsets[r.id]
+                except:
+                    print("no found offset for robot %i, skipping correction")
+                    continue
 
-
+                print("iter %i: robot %i has error of %.2f microns"%(posIter, r.id, numpy.linalg.norm([xOffMM, yOffMM]) * 1000 ))
+                # figure out alpha beta offset for this positioner
+                alphaLast, betaLast = positionerAlphaBeta[r.id]
+                r.setAlphaBeta(alphaLast, betaLast)
+                xFiberLast, yFiberLast, zFiberLast = r.metFiberPos
+                # add fiber offset
+                xOff, yOff = positionerOffsets[r.id]
+                nextFiberX = xFiberLast + xOff
+                nextFiberY = yFiberLast + yOff
+                metFiberID = 0
+                nextAlpha, nextBeta = r.alphaBetaFromFiberXY(nextFiberX, nextFiberY, metFiberID)
+                alphaOff = nextAlpha - alphaLast
+                betaOff = nextBeta - betaLast
+                if numpy.max(numpy.abs[alphaOff, betaOff]) > 2:
+                    print("max alpha beta offsets are too high: %.2f, %.2f"%(alphaOff, betaOff))
+                    continue
+                positionerAlphaBeta[r.id] = [nextAlpha, nextBeta]
+                await fps[r.id].goto(alpha=nextAlpha, beta=nextBeta)
 
         logFile.write("starting reverse trajectory seed=%i trial=%i collisionBuffer=%.2f\n"%(seed, trialNumber, collisionBuffer))
 
@@ -394,7 +458,7 @@ def multiImage():
     # plt.figure()
     fig, axs = plt.subplots(outputList.shape[1], 1)
     for i, ax in enumerate(axs):
-        microns = outputList[:,i,1] * csCam.SCALE_FACTOR * 1000
+        microns = outputList[:,i,1] * scaleFac * 1000
         ax.plot(nImages, microns - microns[0], label="cent %i"%i) # middle index is centroid number, last is distance
     plt.ylabel("microns")
     plt.xlabel("n images averaged")
@@ -419,7 +483,7 @@ def measureDisplacement(fromFile=False):
         f.close()
     output = centroid(imgData, targPos, plot=True)
 
-measureDisplacement(fromFile=True)
+# measureDisplacement(fromFile=True)
 
 # multiImage()
 
